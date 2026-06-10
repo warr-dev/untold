@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "screenshot": "firefox --headless --no-remote --profile $(mktemp -d) --screenshot screenshot.png http://localhost:3000"
   },
   "dependencies": {
     "next": "16.2.9",
