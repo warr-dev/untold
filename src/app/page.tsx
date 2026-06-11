@@ -161,12 +161,14 @@ export default function Home() {
     );
   };
 
-  // Find the story with the most reactions
-  const highlightedStory = stories.reduce((maxStory, currentStory) => {
-    const currentTotal = Object.values(currentStory.reactions).reduce((sum, val) => sum + val, 0);
-    const maxTotal = Object.values(maxStory.reactions).reduce((sum, val) => sum + val, 0);
-    return currentTotal > maxTotal ? currentStory : maxStory;
-  }, stories[0]);
+  // Find the top 3 stories with the most reactions
+  const highlightedStories = [...stories]
+    .sort((a, b) => {
+      const aTotal = Object.values(a.reactions).reduce((sum, val) => sum + val, 0);
+      const bTotal = Object.values(b.reactions).reduce((sum, val) => sum + val, 0);
+      return bTotal - aTotal;
+    })
+    .slice(0, 3);
 
   const handleCreateStory = (newStoryData: { title: string; content: string; category: string }) => {
     // Generate a beautiful, unique HSL aura gradient
@@ -301,9 +303,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Highlighted Untold Story Section */}
-      {highlightedStory && (
-        <section className="py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Highlighted Untold Stories Section */}
+      {highlightedStories.length > 0 && (
+        <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative group p-8 rounded-3xl border border-brand-indigo/20 bg-gradient-to-br from-brand-indigo/[0.03] to-brand-lavender/[0.01] dark:from-brand-indigo/[0.06] dark:to-brand-lavender/[0.02] shadow-xl shadow-brand-indigo/5 dark:shadow-brand-indigo/10 overflow-hidden">
             {/* Background large decorative quote mark */}
             <div className="absolute -right-6 -bottom-10 opacity-[0.03] dark:opacity-[0.05] pointer-events-none text-brand-indigo select-none">
@@ -311,22 +313,32 @@ export default function Home() {
             </div>
 
             {/* Section Header */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-8">
               <span className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
               <span className="text-[10px] font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
-                Current Highlight — Most Connected Story
+                Trending Highlights — Top 3 Most Connected Untolds
               </span>
             </div>
 
-            {/* Controlled Story Card */}
-            <StoryCard
-              story={highlightedStory}
-              reactions={highlightedStory.reactions}
-              activeReactions={activeReactions[highlightedStory.id]}
-              onReactionClick={(type) => handleReaction(highlightedStory.id, type)}
-              comments={highlightedStory.comments}
-              onAddComment={(text) => handleAddComment(highlightedStory.id, text)}
-            />
+            {/* Controlled Story Cards Grid */}
+            <div className="grid md:grid-cols-3 gap-6 relative z-10">
+              {highlightedStories.map((story, index) => (
+                <div key={story.id} className="relative flex flex-col">
+                  {/* Badge for Rank (1st, 2nd, 3rd) */}
+                  <div className="absolute -top-3 -left-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand-indigo to-brand-lavender text-xs font-black text-white shadow-md">
+                    {index + 1}
+                  </div>
+                  <StoryCard
+                    story={story}
+                    reactions={story.reactions}
+                    activeReactions={activeReactions[story.id]}
+                    onReactionClick={(type) => handleReaction(story.id, type)}
+                    comments={story.comments}
+                    onAddComment={(text) => handleAddComment(story.id, text)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
