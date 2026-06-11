@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { LogoIcon, SunIcon, MoonIcon, PlusIcon, QuoteIcon } from "../components/icons";
-import { StoryCard, StoryProps } from "../components/story-card";
+import { StoryCard, StoryProps, ReactionData } from "../components/story-card";
 import { ShareStoryModal } from "../components/share-story-modal";
 
 const INITIAL_STORIES: StoryProps[] = [
@@ -84,6 +84,7 @@ const CATEGORIES = [
 
 export default function Home() {
   const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
+  const [activeReactions, setActiveReactions] = useState<{ [storyId: string]: { [key: string]: boolean } }>({});
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -102,6 +103,70 @@ export default function Home() {
       setTheme("dark");
     }
   };
+
+  const handleReaction = (storyId: string, type: keyof ReactionData) => {
+    const storyActive = activeReactions[storyId] || {};
+    const isActive = !!storyActive[type];
+
+    // Toggle the active state
+    setActiveReactions((prev) => ({
+      ...prev,
+      [storyId]: {
+        ...storyActive,
+        [type]: !isActive,
+      },
+    }));
+
+    // Adjust the story reaction counts
+    setStories((prev) =>
+      prev.map((s) => {
+        if (s.id === storyId) {
+          return {
+            ...s,
+            reactions: {
+              ...s.reactions,
+              [type]: isActive ? s.reactions[type] - 1 : s.reactions[type] + 1,
+            },
+          };
+        }
+        return s;
+      })
+    );
+  };
+
+  const handleAddComment = (storyId: string, commentText: string) => {
+    const adjectives = ["Warm", "Gentle", "Quiet", "Kind", "Calm", "Wise", "Brave", "Empathetic", "Listening"];
+    const nouns = ["Soul", "Wave", "Panda", "River", "Sparrow", "Oak", "Star", "Flame", "Cloud", "Echo"];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const author = `${adj} ${noun}`;
+
+    const newComment = {
+      id: Math.random().toString(36).substr(2, 9),
+      author,
+      content: commentText,
+      timeAgo: "Just now",
+    };
+
+    setStories((prev) =>
+      prev.map((s) => {
+        if (s.id === storyId) {
+          return {
+            ...s,
+            comments: [...s.comments, newComment],
+          };
+        }
+        return s;
+      })
+    );
+  };
+
+  // Find the story with the most reactions
+  const highlightedStory = stories.reduce((maxStory, currentStory) => {
+    const currentTotal = Object.values(currentStory.reactions).reduce((sum, val) => sum + val, 0);
+    const maxTotal = Object.values(maxStory.reactions).reduce((sum, val) => sum + val, 0);
+    return currentTotal > maxTotal ? currentStory : maxStory;
+  }, stories[0]);
 
   const handleCreateStory = (newStoryData: { title: string; content: string; category: string }) => {
     // Generate a beautiful, unique HSL aura gradient
@@ -236,6 +301,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Highlighted Untold Story Section */}
+      {highlightedStory && (
+        <section className="py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative group p-8 rounded-3xl border border-brand-indigo/20 bg-gradient-to-br from-brand-indigo/[0.03] to-brand-lavender/[0.01] dark:from-brand-indigo/[0.06] dark:to-brand-lavender/[0.02] shadow-xl shadow-brand-indigo/5 dark:shadow-brand-indigo/10 overflow-hidden">
+            {/* Background large decorative quote mark */}
+            <div className="absolute -right-6 -bottom-10 opacity-[0.03] dark:opacity-[0.05] pointer-events-none text-brand-indigo select-none">
+              <QuoteIcon size={250} />
+            </div>
+
+            {/* Section Header */}
+            <div className="flex items-center gap-2 mb-6">
+              <span className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
+              <span className="text-[10px] font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
+                Current Highlight — Most Connected Story
+              </span>
+            </div>
+
+            {/* Controlled Story Card */}
+            <StoryCard
+              story={highlightedStory}
+              reactions={highlightedStory.reactions}
+              activeReactions={activeReactions[highlightedStory.id]}
+              onReactionClick={(type) => handleReaction(highlightedStory.id, type)}
+              comments={highlightedStory.comments}
+              onAddComment={(text) => handleAddComment(highlightedStory.id, text)}
+            />
+          </div>
+        </section>
+      )}
+
       {/* Philosophy Section */}
       <section id="philosophy" className="py-20 bg-zinc-50 dark:bg-black/20 border-y border-zinc-200/50 dark:border-white/5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -364,7 +459,15 @@ export default function Home() {
         {filteredStories.length > 0 ? (
           <div className="grid md:grid-cols-2 gap-6 items-start">
             {filteredStories.map((story) => (
-              <StoryCard key={story.id} story={story} />
+              <StoryCard
+                key={story.id}
+                story={story}
+                reactions={story.reactions}
+                activeReactions={activeReactions[story.id]}
+                onReactionClick={(type) => handleReaction(story.id, type)}
+                comments={story.comments}
+                onAddComment={(text) => handleAddComment(story.id, text)}
+              />
             ))}
           </div>
         ) : (

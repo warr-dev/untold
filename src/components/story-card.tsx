@@ -28,18 +28,38 @@ export interface StoryProps {
   comments: CommentData[];
 }
 
-export const StoryCard: React.FC<{ story: StoryProps }> = ({ story }) => {
-  const [reactions, setReactions] = useState<ReactionData>(story.reactions);
-  const [activeReactions, setActiveReactions] = useState<{ [key: string]: boolean }>({
+interface StoryCardProps {
+  story: StoryProps;
+  reactions?: ReactionData;
+  activeReactions?: { [key: string]: boolean };
+  onReactionClick?: (type: keyof ReactionData) => void;
+  comments?: CommentData[];
+  onAddComment?: (commentText: string) => void;
+}
+
+export const StoryCard: React.FC<StoryCardProps> = ({
+  story,
+  reactions: propReactions,
+  activeReactions: propActiveReactions,
+  onReactionClick,
+  comments: propComments,
+  onAddComment,
+}) => {
+  const [localReactions, setLocalReactions] = useState<ReactionData>(story.reactions);
+  const [localActiveReactions, setLocalActiveReactions] = useState<{ [key: string]: boolean }>({
     relate: false,
     alone: false,
     thank: false,
     help: false,
   });
+  const [localComments, setLocalComments] = useState<CommentData[]>(story.comments);
 
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [commentsList, setCommentsList] = useState<CommentData[]>(story.comments);
+
+  const reactions = propReactions ?? localReactions;
+  const activeReactions = propActiveReactions ?? localActiveReactions;
+  const commentsList = propComments ?? localComments;
 
   // Lists of adjectives and nouns to generate a random anonymous commenter name
   const adjectives = ["Warm", "Gentle", "Quiet", "Kind", "Calm", "Wise", "Brave", "Empathetic", "Listening"];
@@ -52,27 +72,35 @@ export const StoryCard: React.FC<{ story: StoryProps }> = ({ story }) => {
   };
 
   const handleReactionClick = (type: keyof ReactionData) => {
-    const isActive = activeReactions[type];
-    setActiveReactions((prev) => ({ ...prev, [type]: !isActive }));
-    setReactions((prev) => ({
-      ...prev,
-      [type]: isActive ? prev[type] - 1 : prev[type] + 1,
-    }));
+    if (onReactionClick) {
+      onReactionClick(type);
+    } else {
+      const isActive = localActiveReactions[type];
+      setLocalActiveReactions((prev) => ({ ...prev, [type]: !isActive }));
+      setLocalReactions((prev) => ({
+        ...prev,
+        [type]: isActive ? prev[type] - 1 : prev[type] + 1,
+      }));
+    }
   };
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
 
-    const newComment: CommentData = {
-      id: Math.random().toString(36).substr(2, 9),
-      author: generateAnonymousName(),
-      content: commentText.trim(),
-      timeAgo: "Just now",
-    };
-
-    setCommentsList((prev) => [...prev, newComment]);
-    setCommentText("");
+    if (onAddComment) {
+      onAddComment(commentText.trim());
+      setCommentText("");
+    } else {
+      const newComment: CommentData = {
+        id: Math.random().toString(36).substr(2, 9),
+        author: generateAnonymousName(),
+        content: commentText.trim(),
+        timeAgo: "Just now",
+      };
+      setLocalComments((prev) => [...prev, newComment]);
+      setCommentText("");
+    }
   };
 
   return (
