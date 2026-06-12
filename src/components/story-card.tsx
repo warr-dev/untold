@@ -49,7 +49,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   const [localHasUpvoted, setLocalHasUpvoted] = useState<boolean>(false);
   const [localComments, setLocalComments] = useState<CommentData[]>(story.comments);
 
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(!onOpenDetails);
   const [commentText, setCommentText] = useState("");
 
   const upvotesCount = propUpvotes ?? localUpvotes;
@@ -201,24 +201,40 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
         {/* Comment Action Toggle */}
         <div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowComments(!showComments);
-            }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-505 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
-          >
-            <EyeIcon size={16} />
-            <span>Comments</span>
-            <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-650 dark:text-zinc-300 font-bold">
-              {commentsList.length}
-            </span>
-          </button>
+          {onOpenDetails ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenDetails();
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-505 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300 cursor-pointer"
+            >
+              <EyeIcon size={16} />
+              <span>Comments</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-650 dark:text-zinc-300 font-bold">
+                {commentsList.length}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowComments(!showComments);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-505 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300 cursor-pointer"
+            >
+              <EyeIcon size={16} />
+              <span>Comments</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-650 dark:text-zinc-300 font-bold">
+                {commentsList.length}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Expandable Comments Drawer */}
-      {showComments && (
+      {/* Expandable Comments Drawer (Only rendered in detailed view) */}
+      {!onOpenDetails && showComments && (
         <div
           onClick={(e) => e.stopPropagation()}
           className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-800 animate-fadeIn duration-300"
