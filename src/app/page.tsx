@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { LogoIcon, SunIcon, MoonIcon, PlusIcon, QuoteIcon, CloseIcon } from "../components/icons";
-import { StoryCard, StoryProps, ReactionData } from "../components/story-card";
-import { ShareStoryModal } from "../components/share-story-modal";
+import Link from "next/link";
+import { LogoIcon, SunIcon, MoonIcon, PlusIcon, QuoteIcon } from "../components/icons";
+import { StoryCard, StoryProps } from "../components/story-card";
 
 const INITIAL_STORIES: StoryProps[] = [
   {
@@ -68,26 +68,7 @@ const INITIAL_STORIES: StoryProps[] = [
   }
 ];
 
-const CATEGORIES = [
-  "All",
-  "Life",
-  "Relationships",
-  "Career",
-  "Family",
-  "Education",
-  "Mental Health",
-  "Confessions",
-  "Success Stories",
-  "Failure Stories",
-  "Life Lessons",
-];
-
 export default function Home() {
-  const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
-  const [activeReactions, setActiveReactions] = useState<{ [storyId: string]: { [key: string]: boolean } }>({});
-  const [detailedStoryId, setDetailedStoryId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
@@ -105,97 +86,14 @@ export default function Home() {
     }
   };
 
-  const handleReaction = (storyId: string, type: keyof ReactionData) => {
-    const storyActive = activeReactions[storyId] || {};
-    const isActive = !!storyActive[type];
-
-    // Toggle the active state
-    setActiveReactions((prev) => ({
-      ...prev,
-      [storyId]: {
-        ...storyActive,
-        [type]: !isActive,
-      },
-    }));
-
-    // Adjust the story reaction counts
-    setStories((prev) =>
-      prev.map((s) => {
-        if (s.id === storyId) {
-          return {
-            ...s,
-            reactions: {
-              ...s.reactions,
-              [type]: isActive ? s.reactions[type] - 1 : s.reactions[type] + 1,
-            },
-          };
-        }
-        return s;
-      })
-    );
-  };
-
-  const handleAddComment = (storyId: string, commentText: string) => {
-    const adjectives = ["Warm", "Gentle", "Quiet", "Kind", "Calm", "Wise", "Brave", "Empathetic", "Listening"];
-    const nouns = ["Soul", "Wave", "Panda", "River", "Sparrow", "Oak", "Star", "Flame", "Cloud", "Echo"];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    const author = `${adj} ${noun}`;
-
-    const newComment = {
-      id: Math.random().toString(36).substr(2, 9),
-      author,
-      content: commentText,
-      timeAgo: "Just now",
-    };
-
-    setStories((prev) =>
-      prev.map((s) => {
-        if (s.id === storyId) {
-          return {
-            ...s,
-            comments: [...s.comments, newComment],
-          };
-        }
-        return s;
-      })
-    );
-  };
-
   // Find the top 3 stories with the most reactions
-  const highlightedStories = [...stories]
+  const highlightedStories = [...INITIAL_STORIES]
     .sort((a, b) => {
       const aTotal = Object.values(a.reactions).reduce((sum, val) => sum + val, 0);
       const bTotal = Object.values(b.reactions).reduce((sum, val) => sum + val, 0);
       return bTotal - aTotal;
     })
     .slice(0, 3);
-
-  const handleCreateStory = (newStoryData: { title: string; content: string; category: string }) => {
-    // Generate a beautiful, unique HSL aura gradient
-    const h1 = Math.floor(Math.random() * 360);
-    const h2 = (h1 + 140) % 360;
-    const auraGradient = `linear-gradient(135deg, hsl(${h1}, 75%, 60%) 0%, hsl(${h2}, 85%, 50%) 100%)`;
-
-    const newStory: StoryProps = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newStoryData.title,
-      content: newStoryData.content,
-      category: newStoryData.category,
-      timeAgo: "Just now",
-      auraGradient,
-      reactions: { relate: 0, alone: 0, thank: 0, help: 0 },
-      comments: [],
-    };
-
-    setStories((prev) => [newStory, ...prev]);
-  };
-
-  // Filtered stories based on selection
-  const filteredStories =
-    selectedCategory === "All"
-      ? stories
-      : stories.filter((story) => story.category.toLowerCase() === selectedCategory.toLowerCase());
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-mesh-glow relative">
@@ -214,9 +112,9 @@ export default function Home() {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            <a href="#feed" className="hover:text-brand-indigo dark:hover:text-brand-lavender transition-colors">
-              Stories
-            </a>
+            <Link href="/platform" className="hover:text-brand-indigo dark:hover:text-brand-lavender transition-colors">
+              Sharing Hub
+            </Link>
             <a href="#philosophy" className="hover:text-brand-indigo dark:hover:text-brand-lavender transition-colors">
               Philosophy
             </a>
@@ -236,13 +134,12 @@ export default function Home() {
             </button>
 
             {/* CTA */}
-            <button
-              onClick={() => setIsModalOpen(true)}
+            <Link
+              href="/platform"
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-brand-indigo hover:bg-brand-indigo/90 shadow-md shadow-brand-indigo/10 hover:shadow-lg hover:shadow-brand-indigo/25 transition-all duration-350"
             >
-              <PlusIcon size={16} />
-              <span>Share Story</span>
-            </button>
+              <span>Go to Platform</span>
+            </Link>
           </div>
         </div>
       </header>
@@ -272,19 +169,19 @@ export default function Home() {
           </p>
 
           {/* Hero CTAs */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-16">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="w-full sm:w-56 px-8 py-4 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl font-bold shadow-lg shadow-brand-indigo/20 hover:shadow-xl transition-all duration-300"
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-16 animate-fadeIn transition-all duration-300">
+            <Link
+              href="/platform?write=true"
+              className="w-full sm:w-56 px-8 py-4 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl font-bold text-center shadow-lg shadow-brand-indigo/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center"
             >
               Share Your Story
-            </button>
-            <a
-              href="#feed"
-              className="w-full sm:w-56 px-8 py-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 rounded-xl font-bold text-center border border-zinc-200 dark:border-white/5 transition-all duration-300"
+            </Link>
+            <Link
+              href="/platform"
+              className="w-full sm:w-56 px-8 py-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 rounded-xl font-bold text-center border border-zinc-200 dark:border-white/5 transition-all duration-300 flex items-center justify-center"
             >
-              Read Stories
-            </a>
+              Enter Sharing Hub
+            </Link>
           </div>
 
           {/* Quick Stats Grid */}
@@ -314,11 +211,20 @@ export default function Home() {
             </div>
 
             {/* Section Header */}
-            <div className="flex items-center gap-2 mb-8">
-              <span className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
-              <span className="text-[10px] font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
-                Trending Highlights — Top 3 Most Connected Untolds
-              </span>
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
+                <span className="text-[10px] font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
+                  Trending Highlights — Top 3 Most Echoed Stories
+                </span>
+              </div>
+              <Link
+                href="/platform"
+                className="text-xs font-bold text-brand-indigo dark:text-brand-lavender hover:underline flex items-center gap-1"
+              >
+                <span>View All Stories</span>
+                <span>→</span>
+              </Link>
             </div>
 
             {/* Controlled Story Cards Grid */}
@@ -331,12 +237,11 @@ export default function Home() {
                   </div>
                   <StoryCard
                     story={story}
-                    reactions={story.reactions}
-                    activeReactions={activeReactions[story.id]}
-                    onReactionClick={(type) => handleReaction(story.id, type)}
-                    comments={story.comments}
-                    onAddComment={(text) => handleAddComment(story.id, text)}
-                    onOpenDetails={() => setDetailedStoryId(story.id)}
+                    onOpenDetails={() => {
+                      if (typeof window !== "undefined") {
+                        window.location.href = `/platform?storyId=${story.id}`;
+                      }
+                    }}
                   />
                 </div>
               ))}
@@ -358,7 +263,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            {/* The Other Way */}
+            {/* Traditional Social */}
             <div className="p-8 rounded-2xl border border-zinc-200 bg-white dark:bg-zinc-900/10 dark:border-zinc-800/50 flex flex-col justify-between">
               <div>
                 <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block mb-4">
@@ -386,7 +291,7 @@ export default function Home() {
                   </li>
                 </ul>
               </div>
-              <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/50 text-xs italic text-zinc-450">
+              <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/50 text-xs italic text-zinc-400">
                 Connection based on popularity and vanity.
               </div>
             </div>
@@ -428,80 +333,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Main Feed Section */}
-      <section id="feed" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-16">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div>
-            <h2 className="text-3xl font-bold font-serif text-zinc-900 dark:text-zinc-50">
-              The Feed of Honesty
-            </h2>
-            <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
-              Read authentic, anonymous stories from all walks of life.
-            </p>
-          </div>
-
-          {/* Quick share on feed */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-indigo/10 hover:shadow-xl transition-all"
-          >
-            <PlusIcon size={16} />
-            <span>Write Your Story</span>
-          </button>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 -mx-4 px-4 sm:-mx-0 sm:px-0 scrollbar-none">
-          {CATEGORIES.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 ${
-                selectedCategory === category
-                  ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                  : "bg-zinc-100 hover:bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        {/* Stories Grid */}
-        {filteredStories.length > 0 ? (
-          <div className="grid md:grid-cols-2 gap-6 items-start">
-            {filteredStories.map((story) => (
-              <StoryCard
-                key={story.id}
-                story={story}
-                reactions={story.reactions}
-                activeReactions={activeReactions[story.id]}
-                onReactionClick={(type) => handleReaction(story.id, type)}
-                comments={story.comments}
-                onAddComment={(text) => handleAddComment(story.id, text)}
-                onOpenDetails={() => setDetailedStoryId(story.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-24 glass-panel rounded-2xl border border-zinc-200 dark:border-white/5">
-            <QuoteIcon className="mx-auto text-zinc-200 dark:text-zinc-800 mb-4" size={48} />
-            <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200 mb-1">
-              No stories in this category yet
-            </h3>
-            <p className="text-sm text-zinc-400 dark:text-zinc-500 mb-6">
-              Be the first to share your voice in {selectedCategory}.
-            </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-5 py-2.5 bg-brand-indigo text-white rounded-xl text-xs font-bold hover:bg-brand-indigo/90 transition-colors"
-            >
-              Write First Story
-            </button>
-          </div>
-        )}
       </section>
 
       {/* Community Principles / Guidelines Section */}
@@ -568,7 +399,7 @@ export default function Home() {
             &quot;Every untold story deserves a voice.&quot;
           </p>
           <div className="flex items-center gap-6 mt-2 text-zinc-500 dark:text-zinc-400">
-            <a href="#feed" className="hover:text-brand-indigo transition-colors">Stories</a>
+            <Link href="/platform" className="hover:text-brand-indigo transition-colors">Stories</Link>
             <span>•</span>
             <a href="#philosophy" className="hover:text-brand-indigo transition-colors">Philosophy</a>
             <span>•</span>
@@ -579,53 +410,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-
-      {/* Story Submission Modal */}
-      <ShareStoryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateStory}
-      />
-
-      {/* Story Detail Modal */}
-      {detailedStoryId && stories.find((s) => s.id === detailedStoryId) && (() => {
-        const detailedStory = stories.find((s) => s.id === detailedStoryId)!;
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-              onClick={() => setDetailedStoryId(null)}
-            />
-
-            {/* Modal Container */}
-            <div className="glass-panel relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0d0c24] p-6 shadow-2xl animate-scaleIn transition-all duration-300 border border-zinc-200 dark:border-white/10 max-h-[90vh] overflow-y-auto">
-              {/* Header / Close button */}
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-150 dark:border-white/5 mb-6">
-                <span className="text-xs font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
-                  Story Details
-                </span>
-                <button
-                  onClick={() => setDetailedStoryId(null)}
-                  className="p-1 rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-white/5 dark:hover:text-zinc-200 transition-colors"
-                >
-                  <CloseIcon size={22} />
-                </button>
-              </div>
-
-              {/* Controlled Story Card in details mode (no onOpenDetails prop) */}
-              <StoryCard
-                story={detailedStory}
-                reactions={detailedStory.reactions}
-                activeReactions={activeReactions[detailedStory.id]}
-                onReactionClick={(type) => handleReaction(detailedStory.id, type)}
-                comments={detailedStory.comments}
-                onAddComment={(text) => handleAddComment(detailedStory.id, text)}
-              />
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 }
