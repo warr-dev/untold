@@ -203,6 +203,19 @@ function PlatformContent() {
     }
   }, [searchParams]);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = isModalOpen || isRecoveryModalOpen || !!detailedStoryId;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isModalOpen, isRecoveryModalOpen, detailedStoryId]);
+
   const toggleTheme = () => {
     if (theme === "dark") {
       document.documentElement.classList.remove("dark");
