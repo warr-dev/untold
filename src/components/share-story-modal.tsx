@@ -25,7 +25,7 @@ const PRESET_TAGS = [
 export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([PRESET_TAGS[0]]);
   const [newTagInput, setNewTagInput] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
@@ -48,7 +48,13 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
 
   const handleTagToggle = (tag: string) => {
     if (selectedTags.includes(tag)) {
-      setSelectedTags((prev) => prev.filter((t) => t !== tag));
+      // Must keep at least one tag
+      if (selectedTags.length > 1) {
+        setSelectedTags((prev) => prev.filter((t) => t !== tag));
+        setError("");
+      } else {
+        setError("Please select at least one tag.");
+      }
     } else {
       if (selectedTags.length < 5) {
         setSelectedTags((prev) => [...prev, tag]);
@@ -94,6 +100,10 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
       setError("Please write a title.");
       return;
     }
+    if (selectedTags.length === 0) {
+      setError("Please select at least one tag.");
+      return;
+    }
     if (!content.trim() || content.length < 20) {
       setError("Please write a post containing at least 20 characters.");
       return;
@@ -112,7 +122,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
     // Reset fields
     setTitle("");
     setContent("");
-    setSelectedTags([]);
+    setSelectedTags([PRESET_TAGS[0]]);
     setNewTagInput("");
     setAgreed(false);
     onClose();
@@ -174,7 +184,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
           {/* Tags Selection & Dynamic Creation */}
           <div>
             <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-              Select Tags (Optional, Choose up to 5)
+              Select Tags (Choose 1 to 5)
             </label>
             
             {/* Preset pills */}
@@ -245,6 +255,13 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
                 </div>
               </div>
             )}
+            
+            {/* Show local notice if tags is empty */}
+            {selectedTags.length === 0 && (
+              <p className="text-[10px] text-rose-500 mt-2 font-semibold">
+                Please select at least one tag.
+              </p>
+            )}
           </div>
 
           {/* Story Content */}
@@ -286,7 +303,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
                 id="agreement-checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 rounded border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-brand-indigo focus:ring-brand-indigo cursor-pointer h-4 w-4"
+                className="mt-0.5 rounded border-zinc-300 dark:border-zinc-700 bg-zinc-55 dark:bg-zinc-900 text-brand-indigo focus:ring-brand-indigo cursor-pointer h-4 w-4"
               />
               <label htmlFor="agreement-checkbox" className="text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer select-none">
                 I agree to share with respect. I understand that target harassment or toxic spam will be removed.
@@ -305,7 +322,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
             </button>
             <button
               type="submit"
-              disabled={!agreed}
+              disabled={!agreed || selectedTags.length === 0}
               className="px-6 py-2.5 rounded-xl bg-brand-indigo hover:bg-brand-indigo/90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-white shadow-lg shadow-brand-indigo/20 transition-all duration-300 hover:shadow-xl"
             >
               Publish Anonymously
