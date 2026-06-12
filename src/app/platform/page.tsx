@@ -75,6 +75,17 @@ const INITIAL_STORIES: StoryProps[] = [
   }
 ];
 
+function getAuraGradient(authorId: string): string {
+  if (!authorId) return "linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)";
+  let hash = 0;
+  for (let i = 0; i < authorId.length; i++) {
+    hash = authorId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 140) % 360;
+  return `linear-gradient(135deg, hsl(${h1}, 75%, 60%) 0%, hsl(${h2}, 85%, 50%) 100%)`;
+}
+
 function PlatformContent() {
   const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
   const [activeUpvotes, setActiveUpvotes] = useState<{ [storyId: string]: boolean }>({});
@@ -92,6 +103,14 @@ function PlatformContent() {
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
   const [isRecoveryBound, setIsRecoveryBound] = useState(false);
   const [maskedContact, setMaskedContact] = useState("");
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(myAuthorId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const searchParams = useSearchParams();
 
@@ -361,7 +380,7 @@ function PlatformContent() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-full border border-zinc-200 dark:border-white/5 hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors text-zinc-500 dark:text-zinc-400"
+              className="p-2.5 rounded-full border border-zinc-200 dark:border-white/5 hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors text-zinc-500 dark:text-zinc-400 cursor-pointer"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <SunIcon size={18} /> : <MoonIcon size={18} />}
@@ -369,11 +388,158 @@ function PlatformContent() {
 
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-brand-indigo hover:bg-brand-indigo/90 shadow-md transition-all duration-300"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-brand-indigo hover:bg-brand-indigo/90 shadow-md transition-all duration-300 cursor-pointer"
             >
               <PlusIcon size={16} />
               <span className="hidden sm:inline">Share Something</span>
             </button>
+
+            {/* Profile Avatar / Voice Security Popover */}
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="w-9 h-9 rounded-full border border-zinc-200 dark:border-white/10 hover:border-brand-indigo dark:hover:border-brand-lavender p-0.5 transition-all duration-300 focus:outline-none flex-shrink-0 cursor-pointer flex items-center justify-center"
+                title="Anonymous Profile"
+              >
+                <div
+                  className="w-full h-full rounded-full shadow-inner relative overflow-hidden"
+                  style={{ background: getAuraGradient(myAuthorId) }}
+                >
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
+                </div>
+              </button>
+
+              {isProfileDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-3 w-80 rounded-2xl bg-white dark:bg-[#0c0b22] border border-zinc-200 dark:border-white/10 shadow-2xl p-5 z-50 animate-scaleIn select-none">
+                    <div className="flex flex-col items-center text-center pb-4 border-b border-zinc-100 dark:border-white/5">
+                      <div
+                        className="w-14 h-14 rounded-full shadow-md relative overflow-hidden mb-2.5"
+                        style={{ background: getAuraGradient(myAuthorId) }}
+                      >
+                        <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
+                      </div>
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                        Anonymous Voice
+                      </h4>
+                      <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+                        Your unique aura signature
+                      </p>
+                    </div>
+
+                    <div className="py-4 space-y-4">
+                      {/* Author ID */}
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block">
+                          Writer Signature ID
+                        </label>
+                        <div className="flex gap-2 items-center">
+                          <div className="flex-1 py-1.5 px-2.5 rounded-lg bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 text-[10px] font-mono text-zinc-700 dark:text-zinc-300 break-all select-all text-left">
+                            {myAuthorId}
+                          </div>
+                          <button
+                            onClick={handleCopyId}
+                            className="px-2.5 py-1.5 bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 rounded-lg text-[10px] font-bold border border-zinc-200 dark:border-white/5 transition-all cursor-pointer flex-shrink-0"
+                          >
+                            {copied ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Security Status */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                            Voice Security
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                              isRecoveryBound
+                                ? "bg-brand-teal/15 text-brand-teal"
+                                : "bg-amber-500/15 text-amber-500"
+                            }`}
+                          >
+                            {isRecoveryBound ? "Secured" : "Vulnerable"}
+                          </span>
+                        </div>
+
+                        {isRecoveryBound ? (
+                          <div className="space-y-2">
+                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                              Your voice is bound to a secure recovery contact hash.
+                            </p>
+                            <div className="py-1.5 px-2.5 rounded-xl bg-brand-teal/5 text-brand-teal border border-brand-teal/10 text-[10px] font-mono text-center">
+                              Bound to: {maskedContact}
+                            </div>
+                            <button
+                              onClick={() => {
+                                localStorage.removeItem("untold_recovery_contact");
+                                localStorage.removeItem("untold_recovery_type");
+                                setIsRecoveryBound(false);
+                                setMaskedContact("");
+                              }}
+                              className="w-full text-center py-1.5 text-[10px] text-rose-500 hover:text-rose-600 hover:underline font-semibold transition-colors cursor-pointer"
+                            >
+                              Remove Recovery Binding
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                              Secure your voice signature to prevent losing your posts when clearing browser data.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setIsProfileDropdownOpen(false);
+                                setIsRecoveryModalOpen(true);
+                              }}
+                              className="w-full py-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer text-center"
+                            >
+                              Setup Recovery Contact
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="pt-3 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between text-[10px]">
+                      <button
+                        onClick={() => {
+                          setIsProfileDropdownOpen(false);
+                          setIsRecoveryModalOpen(true);
+                        }}
+                        className="text-zinc-500 dark:text-zinc-400 hover:text-brand-indigo dark:hover:text-brand-lavender font-bold transition-colors cursor-pointer"
+                      >
+                        Restore Voice
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          if (confirm("This will generate a brand new anonymous writer signature. Continue?")) {
+                            const newAuthorId = "author_" + Math.random().toString(36).substr(2, 9);
+                            setMyAuthorId(newAuthorId);
+                            localStorage.setItem("untold_my_author_id", newAuthorId);
+                            localStorage.removeItem("untold_recovery_contact");
+                            localStorage.removeItem("untold_recovery_type");
+                            setIsRecoveryBound(false);
+                            setMaskedContact("");
+                            setIsProfileDropdownOpen(false);
+                          }
+                        }}
+                        className="text-rose-550 dark:text-rose-450 hover:underline font-bold transition-colors cursor-pointer"
+                      >
+                        New Voice
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -495,52 +661,7 @@ function PlatformContent() {
             </nav>
           </div>
 
-          {/* Voice Security & Recovery Widget */}
-          <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
-            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-2.5">
-              Voice Security
-            </h3>
-            {isRecoveryBound ? (
-              <div className="text-xs space-y-2.5">
-                <p className="text-zinc-650 dark:text-zinc-400 text-[10px] leading-relaxed">
-                  ✓ Your voice signature is securely bound.
-                </p>
-                <div className="py-2 px-1 rounded-xl bg-brand-teal/5 text-brand-teal border border-brand-teal/10 text-[10px] font-mono break-all text-center">
-                  Bound to: {maskedContact}
-                </div>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem("untold_recovery_contact");
-                    localStorage.removeItem("untold_recovery_type");
-                    setIsRecoveryBound(false);
-                    setMaskedContact("");
-                  }}
-                  className="text-[10px] text-rose-500 hover:underline cursor-pointer"
-                >
-                  Remove Recovery Binding
-                </button>
-              </div>
-            ) : (
-              <div className="text-xs space-y-3">
-                <p className="text-zinc-505 dark:text-zinc-400 text-[11px] leading-relaxed">
-                  Secure your anonymous voice in case you clear browser cookies or switch devices.
-                </p>
-                <button
-                  onClick={() => setIsRecoveryModalOpen(true)}
-                  className="w-full py-2 px-3 bg-zinc-100 hover:bg-zinc-205 text-zinc-700 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10 text-[11px] font-bold rounded-xl border border-zinc-200 dark:border-white/5 transition-all text-center cursor-pointer"
-                >
-                  Setup Recovery Contact
-                </button>
-              </div>
-            )}
-            
-            {!isRecoveryBound && (
-              <div className="mt-3 pt-3 border-t border-zinc-150 dark:border-white/5 flex flex-col gap-1 text-[10px] text-zinc-400">
-                <span>Current ID:</span>
-                <span className="font-mono text-brand-indigo dark:text-brand-lavender break-all">{myAuthorId}</span>
-              </div>
-            )}
-          </div>
+
 
           {/* Guidelines Box */}
           <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5 hidden lg:block">
