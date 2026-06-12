@@ -35,6 +35,7 @@ interface StoryCardProps {
   onReactionClick?: (type: keyof ReactionData) => void;
   comments?: CommentData[];
   onAddComment?: (commentText: string) => void;
+  onOpenDetails?: () => void;
 }
 
 export const StoryCard: React.FC<StoryCardProps> = ({
@@ -44,6 +45,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   onReactionClick,
   comments: propComments,
   onAddComment,
+  onOpenDetails,
 }) => {
   const [localReactions, setLocalReactions] = useState<ReactionData>(story.reactions);
   const [localActiveReactions, setLocalActiveReactions] = useState<{ [key: string]: boolean }>({
@@ -104,7 +106,12 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   };
 
   return (
-    <article className="glass-panel group relative flex flex-col rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-brand-indigo/5 hover:border-brand-indigo/20 dark:hover:bg-brand-indigo/[0.03]">
+    <article
+      onClick={() => onOpenDetails && onOpenDetails()}
+      className={`glass-panel group relative flex flex-col rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-brand-indigo/5 hover:border-brand-indigo/20 dark:hover:bg-brand-indigo/[0.03] ${
+        onOpenDetails ? "min-h-[350px] h-[350px] cursor-pointer" : "h-auto"
+      }`}
+    >
       {/* Upper row: Avatar aura & Category & Time */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -130,9 +137,26 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       </h3>
 
       {/* Content */}
-      <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300 mb-6 whitespace-pre-wrap font-sans flex-1">
+      <p
+        className={`text-sm leading-relaxed text-zinc-650 dark:text-zinc-350 mb-4 whitespace-pre-wrap font-sans flex-1 ${
+          onOpenDetails ? "line-clamp-4 overflow-hidden" : ""
+        }`}
+      >
         {story.content}
       </p>
+
+      {/* Read More link */}
+      {onOpenDetails && story.content.length > 180 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDetails();
+          }}
+          className="text-xs font-bold text-brand-indigo dark:text-brand-lavender hover:underline self-start mb-4"
+        >
+          Read full story...
+        </button>
+      )}
 
       {/* Interaction Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
@@ -140,7 +164,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({
         <div className="flex flex-wrap gap-2">
           {/* ❤️ I Relate */}
           <button
-            onClick={() => handleReactionClick("relate")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleReactionClick("relate");
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
               activeReactions.relate
                 ? "bg-rose-500/15 text-rose-500 scale-105"
@@ -156,11 +183,14 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
           {/* 🤝 You're Not Alone */}
           <button
-            onClick={() => handleReactionClick("alone")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleReactionClick("alone");
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
               activeReactions.alone
                 ? "bg-brand-lavender/15 text-brand-lavender scale-105"
-                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                : "bg-zinc-100 text-zinc-505 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
             }`}
           >
             <HandsIcon
@@ -172,7 +202,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
           {/* 💡 Thank You */}
           <button
-            onClick={() => handleReactionClick("thank")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleReactionClick("thank");
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
               activeReactions.thank
                 ? "bg-amber-500/15 text-amber-500 scale-105"
@@ -188,7 +221,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
           {/* 🌱 This Helped Me */}
           <button
-            onClick={() => handleReactionClick("help")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleReactionClick("help");
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
               activeReactions.help
                 ? "bg-brand-teal/15 text-brand-teal scale-105"
@@ -206,8 +242,11 @@ export const StoryCard: React.FC<StoryCardProps> = ({
         {/* Comment Action Toggle */}
         <div>
           <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(!showComments);
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-450 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
           >
             <EyeIcon size={16} />
             <span>Comments</span>
@@ -220,7 +259,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
       {/* Expandable Comments Drawer */}
       {showComments && (
-        <div className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-800 animate-fadeIn duration-300">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-800 animate-fadeIn duration-300"
+        >
           <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3">
             Anonymous Conversations ({commentsList.length})
           </h4>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { LogoIcon, SunIcon, MoonIcon, PlusIcon, QuoteIcon } from "../components/icons";
+import { LogoIcon, SunIcon, MoonIcon, PlusIcon, QuoteIcon, CloseIcon } from "../components/icons";
 import { StoryCard, StoryProps, ReactionData } from "../components/story-card";
 import { ShareStoryModal } from "../components/share-story-modal";
 
@@ -85,6 +85,7 @@ const CATEGORIES = [
 export default function Home() {
   const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
   const [activeReactions, setActiveReactions] = useState<{ [storyId: string]: { [key: string]: boolean } }>({});
+  const [detailedStoryId, setDetailedStoryId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -335,6 +336,7 @@ export default function Home() {
                     onReactionClick={(type) => handleReaction(story.id, type)}
                     comments={story.comments}
                     onAddComment={(text) => handleAddComment(story.id, text)}
+                    onOpenDetails={() => setDetailedStoryId(story.id)}
                   />
                 </div>
               ))}
@@ -479,6 +481,7 @@ export default function Home() {
                 onReactionClick={(type) => handleReaction(story.id, type)}
                 comments={story.comments}
                 onAddComment={(text) => handleAddComment(story.id, text)}
+                onOpenDetails={() => setDetailedStoryId(story.id)}
               />
             ))}
           </div>
@@ -583,6 +586,46 @@ export default function Home() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateStory}
       />
+
+      {/* Story Detail Modal */}
+      {detailedStoryId && stories.find((s) => s.id === detailedStoryId) && (() => {
+        const detailedStory = stories.find((s) => s.id === detailedStoryId)!;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+              onClick={() => setDetailedStoryId(null)}
+            />
+
+            {/* Modal Container */}
+            <div className="glass-panel relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0d0c24] p-6 shadow-2xl animate-scaleIn transition-all duration-300 border border-zinc-200 dark:border-white/10 max-h-[90vh] overflow-y-auto">
+              {/* Header / Close button */}
+              <div className="flex justify-between items-center pb-4 border-b border-zinc-150 dark:border-white/5 mb-6">
+                <span className="text-xs font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
+                  Story Details
+                </span>
+                <button
+                  onClick={() => setDetailedStoryId(null)}
+                  className="p-1 rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-white/5 dark:hover:text-zinc-200 transition-colors"
+                >
+                  <CloseIcon size={22} />
+                </button>
+              </div>
+
+              {/* Controlled Story Card in details mode (no onOpenDetails prop) */}
+              <StoryCard
+                story={detailedStory}
+                reactions={detailedStory.reactions}
+                activeReactions={activeReactions[detailedStory.id]}
+                onReactionClick={(type) => handleReaction(detailedStory.id, type)}
+                comments={detailedStory.comments}
+                onAddComment={(text) => handleAddComment(detailedStory.id, text)}
+              />
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
