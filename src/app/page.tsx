@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { LogoIcon, SunIcon, MoonIcon, QuoteIcon } from "../components/icons";
 import { StoryCard, StoryProps } from "../components/story-card";
+import { getStories } from "./actions";
 
 const INITIAL_STORIES: StoryProps[] = [
   {
@@ -75,6 +76,7 @@ const INITIAL_STORIES: StoryProps[] = [
 export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
+  const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
 
   useEffect(() => {
     // Default theme to dark mode
@@ -91,6 +93,19 @@ export default function Home() {
         }
       }
     }
+
+    // Load database stories on mount
+    async function loadDbStories() {
+      try {
+        const dbStories = await getStories();
+        if (dbStories !== null && dbStories.length > 0) {
+          setStories(dbStories);
+        }
+      } catch (err) {
+        console.error("Failed to load stories from Neon DB:", err);
+      }
+    }
+    loadDbStories();
   }, []);
 
   const toggleTheme = () => {
@@ -114,7 +129,7 @@ export default function Home() {
   };
 
   // Find the top 3 stories with the most upvotes
-  const highlightedStories = [...INITIAL_STORIES]
+  const highlightedStories = [...stories]
     .sort((a, b) => b.upvotes - a.upvotes)
     .slice(0, 3);
 

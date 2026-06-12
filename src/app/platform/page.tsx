@@ -6,6 +6,7 @@ import { LogoIcon, SunIcon, MoonIcon, PlusIcon, CloseIcon, QuoteIcon } from "../
 import { StoryCard, StoryProps } from "../../components/story-card";
 import { ShareStoryModal } from "../../components/share-story-modal";
 import { RecoveryModal } from "../../components/recovery-modal";
+import { getStories, createStory, upvoteStory, addComment } from "../actions";
 
 const INITIAL_STORIES: StoryProps[] = [
   {
@@ -94,6 +95,47 @@ function PlatformContent() {
 
   const searchParams = useSearchParams();
 
+  // Load database stories on mount
+  useEffect(() => {
+    async function loadDbStories() {
+      try {
+        const dbStories = await getStories();
+        if (dbStories !== null) {
+          // If database is available but empty (new deployment), seed it with INITIAL_STORIES
+          if (dbStories.length === 0) {
+            for (const story of INITIAL_STORIES) {
+              await createStory({
+                id: story.id,
+                authorId: story.authorId,
+                title: story.title,
+                content: story.content,
+                tags: story.tags,
+                auraGradient: story.auraGradient,
+              });
+              for (const comment of story.comments) {
+                await addComment({
+                  id: comment.id,
+                  storyId: story.id,
+                  author: comment.author,
+                  content: comment.content,
+                });
+              }
+            }
+            const reFetched = await getStories();
+            if (reFetched) {
+              setStories(reFetched);
+            }
+          } else {
+            setStories(dbStories);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load stories from Neon DB:", err);
+      }
+    }
+    loadDbStories();
+  }, []);
+
   // Check URL parameters and local storage on mount
   useEffect(() => {
     const write = searchParams.get("write");
@@ -152,7 +194,7 @@ function PlatformContent() {
     }
   };
 
-  const handleUpvote = (storyId: string) => {
+  const handleUpvote = async (storyId: string) => {
     const isCurrentlyUpvoted = !!activeUpvotes[storyId];
 
     setActiveUpvotes((prev) => ({
@@ -171,6 +213,12 @@ function PlatformContent() {
         return s;
       })
     );
+
+    try {
+      await upvoteStory(storyId, !isCurrentlyUpvoted);
+    } catch (err) {
+      console.error("Failed to update upvote in Neon DB:", err);
+    }
   };
 
   const handleFollowToggle = (authorId: string) => {
@@ -183,7 +231,7 @@ function PlatformContent() {
     });
   };
 
-  const handleAddComment = (storyId: string, commentText: string) => {
+  const handleAddComment = async (storyId: string, commentText: string) => {
     const adjectives = ["Warm", "Gentle", "Quiet", "Kind", "Calm", "Wise", "Brave", "Empathetic", "Listening"];
     const nouns = ["Soul", "Wave", "Panda", "River", "Sparrow", "Oak", "Star", "Flame", "Cloud", "Echo"];
     const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
@@ -208,9 +256,20 @@ function PlatformContent() {
         return s;
       })
     );
+
+    try {
+      await addComment({
+        id: newComment.id,
+        storyId,
+        author: newComment.author,
+        content: newComment.content,
+      });
+    } catch (err) {
+      console.error("Failed to add comment to Neon DB:", err);
+    }
   };
 
-  const handleCreateStory = (newStoryData: { title: string; content: string; tags: string[] }) => {
+  const handleCreateStory = async (newStoryData: { title: string; content: string; tags: string[] }) => {
     const h1 = Math.floor(Math.random() * 360);
     const h2 = (h1 + 140) % 360;
     const auraGradient = `linear-gradient(135deg, hsl(${h1}, 75%, 60%) 0%, hsl(${h2}, 85%, 50%) 100%)`;
@@ -228,6 +287,19 @@ function PlatformContent() {
     };
 
     setStories((prev) => [newStory, ...prev]);
+
+    try {
+      await createStory({
+        id: newStory.id,
+        authorId: newStory.authorId,
+        title: newStory.title,
+        content: newStory.content,
+        tags: newStory.tags,
+        auraGradient: newStory.auraGradient,
+      });
+    } catch (err) {
+      console.error("Failed to save story to Neon DB:", err);
+    }
   };
 
   // Compile unique tags dynamically from current stories feed state

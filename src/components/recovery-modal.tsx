@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { CloseIcon } from "./icons";
+import { bindRecovery, restoreRecovery } from "../app/actions";
 
 interface RecoveryModalProps {
   isOpen: boolean;
@@ -24,77 +25,116 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
   const [restoreVal, setRestoreVal] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleBind = (e: React.FormEvent) => {
+  const handleBind = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setMessage("");
+    setLoading(true);
 
     const val = contactVal.trim();
     if (!val) {
       setError("Please enter a recovery contact.");
+      setLoading(false);
       return;
     }
 
     if (contactType === "email" && !val.includes("@")) {
       setError("Please enter a valid email address.");
+      setLoading(false);
       return;
     }
 
     if (contactType === "phone" && val.length < 7) {
       setError("Please enter a valid phone number.");
+      setLoading(false);
       return;
     }
 
-    // Save recovery contact to local storage
-    localStorage.setItem("untold_recovery_contact", val);
-    localStorage.setItem("untold_recovery_type", contactType);
-    
-    onBindSuccess(val);
-    setMessage("Successfully bound! Your anonymous signature is now secured. Write down your signature ID: " + currentAuthorId);
-    setContactVal("");
-    setTimeout(() => {
-      onClose();
-      setMessage("");
-    }, 2500);
-  };
+    try {
+      // Call server action to bind recovery contact in Neon DB
+      await bindRecovery(val, currentAuthorId);
 
-  const handleRestore = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setMessage("");
-
-    const val = restoreVal.trim();
-    if (!val) {
-      setError("Please enter your bound email or phone.");
-      return;
-    }
-
-    const savedContact = localStorage.getItem("untold_recovery_contact");
-    
-    // For demo/prototype: we allow restoring if they enter the contact.
-    // If there's no contact saved, we can generate a mock recovered signature based on the hash of the input.
-    if (savedContact && val.toLowerCase() === savedContact.toLowerCase()) {
-      onRestoreSuccess("author_recovered_123");
-      setMessage("Voice signature successfully restored! Your author signature has been updated.");
-      setRestoreVal("");
-      setTimeout(() => {
-        onClose();
-        setMessage("");
-      }, 2000);
-    } else {
-      // If no match, we can simulate generating a deterministic author ID from the contact hash!
-      // This is a brilliant cryptographic simulation.
-      const deterministicId = "author_hash_" + Math.abs(val.split("").reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(36);
-      onRestoreSuccess(deterministicId);
-      setMessage("Voice signature successfully restored! Created deterministic signature: " + deterministicId);
-      setRestoreVal("");
+      // Save locally as well
+      localStorage.setItem("untold_recovery_contact", val);
+      localStorage.setItem("untold_recovery_type", contactType);
+      
+      onBindSuccess(val);
+      setMessage("Successfully bound! Your anonymous signature is now secured. Write down your signature ID: " + currentAuthorId);
+      setContactVal("");
       setTimeout(() => {
         onClose();
         setMessage("");
       }, 2500);
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred during binding. Stored locally as backup.");
+      
+      localStorage.setItem("untold_recovery_contact", val);
+      localStorage.setItem("untold_recovery_type", contactType);
+      onBindSuccess(val);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    const val = restoreVal.trim();
+    if (!val) {
+      setError("Please enter your bound email or phone.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Call server action to query Neon database for the recovery contact hash
+      const recoveredId = await restoreRecovery(val);
+
+      if (recoveredId) {
+        onRestoreSuccess(recoveredId);
+        setMessage("Voice signature successfully restored! Your author signature has been updated.");
+        setRestoreVal("");
+        setTimeout(() => {
+          onClose();
+          setMessage("");
+        }, 2000);
+      } else {
+        // Fallback: If not found in DB, check local mock backup
+        const savedContact = localStorage.getItem("untold_recovery_contact");
+        
+        if (savedContact && val.toLowerCase() === savedContact.toLowerCase()) {
+          onRestoreSuccess("author_recovered_123");
+          setMessage("Voice signature successfully restored from local backup!");
+          setRestoreVal("");
+          setTimeout(() => {
+            onClose();
+            setMessage("");
+          }, 2000);
+        } else {
+          // If completely no match, simulate generating a deterministic author ID
+          const deterministicId = "author_hash_" + Math.abs(val.split("").reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(36);
+          onRestoreSuccess(deterministicId);
+          setMessage("Voice signature successfully restored! Created deterministic signature: " + deterministicId);
+          setRestoreVal("");
+          setTimeout(() => {
+            onClose();
+            setMessage("");
+          }, 2500);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to query database. Dynamic recovery fallback active.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,6 +159,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
         {/* Tabs */}
         <div className="flex gap-2 border-b border-zinc-100 dark:border-white/5 pb-3 mb-4">
           <button
+            type="button"
             onClick={() => {
               setTab("bind");
               setError("");
@@ -131,6 +172,7 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
             Bind Recovery
           </button>
           <button
+            type="button"
             onClick={() => {
               setTab("restore");
               setError("");
@@ -190,15 +232,16 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
               value={contactVal}
               onChange={(e) => setContactVal(e.target.value)}
               placeholder={contactType === "email" ? "Enter recovery email..." : "Enter recovery phone..."}
-              className="w-full px-4 py-2.5 text-xs rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
+              className="w-full px-4 py-2.5 text-xs rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-805 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
               required
             />
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              disabled={loading}
+              className="w-full py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-50"
             >
-              Bind Recovery Contact
+              {loading ? "Binding..." : "Bind Recovery Contact"}
             </button>
           </form>
         ) : (
@@ -212,15 +255,16 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
               value={restoreVal}
               onChange={(e) => setRestoreVal(e.target.value)}
               placeholder="Enter recovery email or phone number..."
-              className="w-full px-4 py-2.5 text-xs rounded-xl border border-zinc-205 bg-zinc-50 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
+              className="w-full px-4 py-2.5 text-xs rounded-xl border border-zinc-205 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
               required
             />
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+              disabled={loading}
+              className="w-full py-2.5 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-50"
             >
-              Restore Voice Signature
+              {loading ? "Restoring..." : "Restore Voice Signature"}
             </button>
           </form>
         )}
