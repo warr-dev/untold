@@ -10,7 +10,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "1",
     title: "Why did the developer go broke?",
-    tag: "Jokes",
+    tags: ["Jokes", "Random"],
     content: "Because he used up all his cache!\n\nSeriously though, I spent three hours debugging a production issue yesterday only to realize my browser was serving a cached version of the old script. Clear your caches, folks. It saves marriages.",
     timeAgo: "1 hour ago",
     auraGradient: "linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)",
@@ -23,7 +23,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "2",
     title: "The Zoom Meeting Fiasco",
-    tag: "Funny Moments",
+    tags: ["Funny Moments", "Random"],
     content: "I was in a very serious client pitch yesterday. I stood up to grab my water, completely forgetting I was wearing a formal shirt on top... and literal SpongeBob pajama bottoms.\n\nMy client stopped mid-sentence, stared, and said, 'Nice trousers, Bob.' My boss facepalmed so hard I heard it through the audio. We ended up winning the contract anyway, probably out of sheer pity.",
     timeAgo: "4 hours ago",
     auraGradient: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
@@ -35,7 +35,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "3",
     title: "The Promotion I Didn't Want",
-    tag: "Career",
+    tags: ["Career", "Confessions"],
     content: "Last month, I was promoted to engineering director. Everyone celebrated. My parents called to say how proud they were, and my peers congratulated me on 'making it.'\n\nBut inside, I feel a suffocating weight. I loved writing code, fixing bugs, and collaborating on technical problems. Now, my days are filled with spreadsheets, political alignment meetings, and performance reviews. I go home feeling empty. I want to ask to step down, but the fear of professional embarrassment and looking like a failure is keeping me silent. So daily, I wear the mask of a successful leader.",
     timeAgo: "6 hours ago",
     auraGradient: "linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)",
@@ -47,7 +47,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "4",
     title: "If we clean a vacuum cleaner...",
-    tag: "Shower Thoughts",
+    tags: ["Shower Thoughts", "Random"],
     content: "If you clean a vacuum cleaner, do you become the vacuum cleaner?\n\nI was cleaning the dust filter on our Dyson this morning and this thought hit me. I've been staring at the wall for twenty minutes questioning the definitions of hygiene and agency.",
     timeAgo: "1 day ago",
     auraGradient: "linear-gradient(135deg, #ef4444 0%, #8b5cf6 100%)",
@@ -59,7 +59,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "5",
     title: "Learning to Breathe Again",
-    tag: "Mental Health",
+    tags: ["Mental Health", "Life Lessons"],
     content: "For three years, panic attacks governed my life. I couldn't go to grocery stores without mapping out the exits. Going to restaurants felt like running a gauntlet. I felt like a broken version of my former self, hiding it from colleagues and friends behind fake excuses.\n\nSix months of therapy and daily practice of sitting in discomfort changed my life. Today, I sat in a crowded coffee shop for an hour, alone, reading a book. No panic. Just the warmth of my cup and the sound of chatter. If you are in the thick of it right now, please know that healing isn't a straight line, but it is possible. Keep breathing.",
     timeAgo: "2 days ago",
     auraGradient: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)",
@@ -165,7 +165,7 @@ function PlatformContent() {
     );
   };
 
-  const handleCreateStory = (newStoryData: { title: string; content: string; tag: string }) => {
+  const handleCreateStory = (newStoryData: { title: string; content: string; tags: string[] }) => {
     const h1 = Math.floor(Math.random() * 360);
     const h2 = (h1 + 140) % 360;
     const auraGradient = `linear-gradient(135deg, hsl(${h1}, 75%, 60%) 0%, hsl(${h2}, 85%, 50%) 100%)`;
@@ -174,7 +174,7 @@ function PlatformContent() {
       id: Math.random().toString(36).substr(2, 9),
       title: newStoryData.title,
       content: newStoryData.content,
-      tag: newStoryData.tag,
+      tags: newStoryData.tags,
       timeAgo: "Just now",
       auraGradient,
       upvotes: 0,
@@ -184,13 +184,14 @@ function PlatformContent() {
     setStories((prev) => [newStory, ...prev]);
   };
 
-  // Filter & Search stories
+  // Filter & Search stories based on tags array
   const filteredStories = stories.filter((story) => {
     const matchesTag =
-      selectedTag === "All" || story.tag.toLowerCase() === selectedTag.toLowerCase();
+      selectedTag === "All" || story.tags.includes(selectedTag);
     const matchesSearch =
       story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      story.content.toLowerCase().includes(searchQuery.toLowerCase());
+      story.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      story.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesTag && matchesSearch;
   });
 
@@ -206,7 +207,7 @@ function PlatformContent() {
                 Untold
               </span>
             </a>
-            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded bg-zinc-200 text-zinc-700 dark:bg-white/5 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded bg-zinc-200 text-zinc-755 dark:bg-white/5 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
               Sharing Hub
             </span>
           </div>
@@ -215,7 +216,7 @@ function PlatformContent() {
           <div className="flex-1 max-w-md hidden md:block">
             <input
               type="text"
-              placeholder="Search jokes, funny moments, secrets..."
+              placeholder="Search jokes, tags, funny moments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 text-xs rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
@@ -250,7 +251,7 @@ function PlatformContent() {
           <div className="w-full md:hidden">
             <input
               type="text"
-              placeholder="Search jokes, funny moments, secrets..."
+              placeholder="Search jokes, tags, funny moments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-3 text-sm rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
@@ -260,7 +261,7 @@ function PlatformContent() {
           {/* Tags panel */}
           <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
             <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-4">
-              Tags
+              Filter by Tag
             </h3>
             <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none">
               {TAGS.map((tag) => (
@@ -284,14 +285,14 @@ function PlatformContent() {
             <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-3">
               Safety Code
             </h3>
-            <ul className="text-[11px] text-zinc-500 dark:text-zinc-400 space-y-2.5">
+            <ul className="text-[11px] text-zinc-505 dark:text-zinc-400 space-y-2.5">
               <li className="flex items-start gap-2">
                 <span className="text-brand-teal font-bold">✓</span>
                 <span>Fully anonymous. No handles, names, or tracking.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-teal font-bold">✓</span>
-                <span>Share jokes, funny moments, confessions, or life stories.</span>
+                <span>Select multiple tags (up to 3) to classify your post.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-teal font-bold">✓</span>
@@ -315,7 +316,7 @@ function PlatformContent() {
                 </p>
               )}
             </div>
-            <span className="text-xs font-semibold text-zinc-400">
+            <span className="text-xs font-semibold text-zinc-405">
               {filteredStories.length} posts found
             </span>
           </div>

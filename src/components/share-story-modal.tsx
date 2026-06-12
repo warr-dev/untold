@@ -25,7 +25,7 @@ const TAGS = [
 export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [tag, setTag] = useState(TAGS[0]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([TAGS[0]]);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,12 +45,34 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
 
   if (!isOpen) return null;
 
+  const handleTagToggle = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      // Must keep at least one tag
+      if (selectedTags.length > 1) {
+        setSelectedTags((prev) => prev.filter((t) => t !== tag));
+      } else {
+        setError("Please select at least one tag.");
+      }
+    } else {
+      if (selectedTags.length < 3) {
+        setSelectedTags((prev) => [...prev, tag]);
+        setError(""); // Clear error if one exists
+      } else {
+        setError("You can select up to 3 tags.");
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!title.trim()) {
       setError("Please write a title.");
+      return;
+    }
+    if (selectedTags.length === 0) {
+      setError("Please select at least one tag.");
       return;
     }
     if (!content.trim() || content.length < 20) {
@@ -65,13 +87,13 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
     onSubmit({
       title: title.trim(),
       content: content.trim(),
-      tag,
+      tags: selectedTags,
     });
 
     // Reset fields
     setTitle("");
     setContent("");
-    setTag(TAGS[0]);
+    setSelectedTags([TAGS[0]]);
     setAgreed(false);
     onClose();
   };
@@ -124,27 +146,35 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., 'The time I called my teacher Mom' or 'Why programmers wear glasses...'"
               maxLength={80}
-              className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo focus:border-brand-indigo text-sm"
+              className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo focus:border-brand-indigo text-sm"
               required
             />
           </div>
 
-          {/* Tag Selector */}
+          {/* Tags Selection pills */}
           <div>
             <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-              Select Tag
+              Select Tags (Choose 1 to 3)
             </label>
-            <select
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-sm appearance-none cursor-pointer"
-            >
-              {TAGS.map((t) => (
-                <option key={t} value={t} className="dark:bg-zinc-950">
-                  {t}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-2">
+              {TAGS.map((t) => {
+                const isSelected = selectedTags.includes(t);
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => handleTagToggle(t)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
+                      isSelected
+                        ? "bg-brand-indigo text-white scale-105 shadow-sm shadow-brand-indigo/15"
+                        : "bg-zinc-100 hover:bg-zinc-205 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Story Content */}
@@ -153,7 +183,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
               <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                 Content
               </label>
-              <span className={`text-xs ${content.length > maxChars * 0.9 ? "text-rose-500" : "text-zinc-400"}`}>
+              <span className={`text-xs ${content.length > maxChars * 0.9 ? "text-rose-500" : "text-zinc-450"}`}>
                 {content.length}/{maxChars}
               </span>
             </div>
@@ -162,10 +192,10 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
               onChange={(e) => setContent(e.target.value.slice(0, maxChars))}
               placeholder="Write your joke, funny moment, shower thought, confession, or random story here anonymously..."
               rows={6}
-              className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-sm leading-relaxed"
+              className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-sm leading-relaxed"
               required
             />
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-505 mt-1">
               Minimum 20 characters. Share jokes, funny stories, or whatever is on your mind.
             </p>
           </div>

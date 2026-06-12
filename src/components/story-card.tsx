@@ -14,7 +14,7 @@ export interface StoryProps {
   id: string;
   title: string;
   content: string;
-  tag: string; // "Jokes", "Funny Moments", "Confessions", etc.
+  tags: string[]; // e.g., ["Jokes", "Random", "Funny Moments"]
   timeAgo: string;
   auraGradient: string; // HSL gradient aura
   upvotes: number;
@@ -97,23 +97,29 @@ export const StoryCard: React.FC<StoryCardProps> = ({
         onOpenDetails ? "min-h-[350px] h-[350px] cursor-pointer" : "h-auto"
       }`}
     >
-      {/* Upper row: Avatar aura & Tag & Time */}
+      {/* Upper row: Avatar aura & Tags row & Time */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           {/* HSL Gradient aura avatar */}
           <div
-            className="w-8 h-8 rounded-full shadow-inner relative overflow-hidden"
+            className="w-8 h-8 rounded-full shadow-inner relative overflow-hidden flex-shrink-0"
             style={{ background: story.auraGradient }}
           >
             <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
           </div>
-          <div>
-            <span className="text-xs font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-lavender">
-              {story.tag}
-            </span>
+          {/* Tags pills flex wrapper */}
+          <div className="flex flex-wrap gap-1">
+            {story.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] font-bold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-lavender whitespace-nowrap"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
-        <span className="text-xs text-zinc-400 dark:text-zinc-500">{story.timeAgo}</span>
+        <span className="text-xs text-zinc-400 dark:text-zinc-505 flex-shrink-0 ml-2">{story.timeAgo}</span>
       </div>
 
       {/* Title */}
@@ -176,11 +182,11 @@ export const StoryCard: React.FC<StoryCardProps> = ({
               e.stopPropagation();
               setShowComments(!showComments);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-505 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
           >
             <EyeIcon size={16} />
             <span>Comments</span>
-            <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-850 text-[10px] text-zinc-650 dark:text-zinc-305 font-bold">
+            <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-650 dark:text-zinc-300 font-bold">
               {commentsList.length}
             </span>
           </button>
@@ -193,7 +199,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
           onClick={(e) => e.stopPropagation()}
           className="mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-800 animate-fadeIn duration-300"
         >
-          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3">
+          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-505 uppercase tracking-wider mb-3">
             Anonymous Conversations ({commentsList.length})
           </h4>
 
@@ -208,12 +214,12 @@ export const StoryCard: React.FC<StoryCardProps> = ({
                     </span>
                     <span className="text-[10px] text-zinc-400">{comment.timeAgo}</span>
                   </div>
-                  <p className="text-xs text-zinc-650 dark:text-zinc-350">{comment.content}</p>
+                  <p className="text-xs text-zinc-650 dark:text-zinc-305">{comment.content}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs italic text-zinc-400 mb-4 dark:text-zinc-500">
+            <p className="text-xs italic text-zinc-400 mb-4 dark:text-zinc-505">
               No responses yet. Share some support.
             </p>
           )}
@@ -225,7 +231,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a supportive response..."
-              className="flex-1 px-3.5 py-2 text-xs rounded-lg border border-zinc-200 bg-white dark:bg-zinc-900/50 dark:border-zinc-805 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-xs"
+              className="flex-1 px-3.5 py-2 text-xs rounded-lg border border-zinc-200 bg-white dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-xs"
             />
             <button
               type="submit"

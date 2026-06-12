@@ -9,7 +9,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "1",
     title: "Why did the developer go broke?",
-    tag: "Jokes",
+    tags: ["Jokes", "Random"],
     content: "Because he used up all his cache!\n\nSeriously though, I spent three hours debugging a production issue yesterday only to realize my browser was serving a cached version of the old script. Clear your caches, folks. It saves marriages.",
     timeAgo: "1 hour ago",
     auraGradient: "linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)",
@@ -22,7 +22,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "2",
     title: "The Zoom Meeting Fiasco",
-    tag: "Funny Moments",
+    tags: ["Funny Moments", "Random"],
     content: "I was in a very serious client pitch yesterday. I stood up to grab my water, completely forgetting I was wearing a formal shirt on top... and literal SpongeBob pajama bottoms.\n\nMy client stopped mid-sentence, stared, and said, 'Nice trousers, Bob.' My boss facepalmed so hard I heard it through the audio. We ended up winning the contract anyway, probably out of sheer pity.",
     timeAgo: "4 hours ago",
     auraGradient: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
@@ -34,7 +34,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "3",
     title: "The Promotion I Didn't Want",
-    tag: "Career",
+    tags: ["Career", "Confessions"],
     content: "Last month, I was promoted to engineering director. Everyone celebrated. My parents called to say how proud they were, and my peers congratulated me on 'making it.'\n\nBut inside, I feel a suffocating weight. I loved writing code, fixing bugs, and collaborating on technical problems. Now, my days are filled with spreadsheets, political alignment meetings, and performance reviews. I go home feeling empty. I want to ask to step down, but the fear of professional embarrassment and looking like a failure is keeping me silent. So daily, I wear the mask of a successful leader.",
     timeAgo: "6 hours ago",
     auraGradient: "linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)",
@@ -46,7 +46,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "4",
     title: "If we clean a vacuum cleaner...",
-    tag: "Shower Thoughts",
+    tags: ["Shower Thoughts", "Random"],
     content: "If you clean a vacuum cleaner, do you become the vacuum cleaner?\n\nI was cleaning the dust filter on our Dyson this morning and this thought hit me. I've been staring at the wall for twenty minutes questioning the definitions of hygiene and agency.",
     timeAgo: "1 day ago",
     auraGradient: "linear-gradient(135deg, #ef4444 0%, #8b5cf6 100%)",
@@ -58,7 +58,7 @@ const INITIAL_STORIES: StoryProps[] = [
   {
     id: "5",
     title: "Learning to Breathe Again",
-    tag: "Mental Health",
+    tags: ["Mental Health", "Life Lessons"],
     content: "For three years, panic attacks governed my life. I couldn't go to grocery stores without mapping out the exits. Going to restaurants felt like running a gauntlet. I felt like a broken version of my former self, hiding it from colleagues and friends behind fake excuses.\n\nSix months of therapy and daily practice of sitting in discomfort changed my life. Today, I sat in a crowded coffee shop for an hour, alone, reading a book. No panic. Just the warmth of my cup and the sound of chatter. If you are in the thick of it right now, please know that healing isn't a straight line, but it is possible. Keep breathing.",
     timeAgo: "2 days ago",
     auraGradient: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)",
@@ -252,7 +252,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold font-serif text-zinc-900 dark:text-zinc-50">
               A Different Way to Connect
             </h2>
-            <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-2">
+            <p className="text-sm text-zinc-400 dark:text-zinc-505 mt-2">
               Most social platforms feed on metrics. Untold feeds on understanding and pure expression.
             </p>
           </div>
@@ -261,7 +261,7 @@ export default function Home() {
             {/* Traditional Social */}
             <div className="p-8 rounded-2xl border border-zinc-200 bg-white dark:bg-zinc-900/10 dark:border-zinc-800/50 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block mb-4">
+                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-505 uppercase tracking-widest block mb-4">
                   Traditional Social Platforms
                 </span>
                 <h3 className="text-2xl font-bold font-serif text-zinc-700 dark:text-zinc-400 mb-6">
@@ -390,7 +390,7 @@ export default function Home() {
               Untold
             </span>
           </div>
-          <p className="italic text-zinc-400 dark:text-zinc-500">
+          <p className="italic text-zinc-400 dark:text-zinc-505">
             &quot;Every untold story deserves a voice.&quot;
           </p>
           <div className="flex items-center gap-6 mt-2 text-zinc-500 dark:text-zinc-400">
@@ -400,7 +400,7 @@ export default function Home() {
             <span>•</span>
             <a href="#guidelines" className="hover:text-brand-indigo transition-colors">Principles</a>
           </div>
-          <p className="mt-6 text-[10px] text-zinc-400 dark:text-zinc-600">
+          <p className="mt-6 text-[10px] text-zinc-400 dark:text-zinc-605">
             &copy; {new Date().getFullYear()} Untold. Created with privacy and empathy.
           </p>
         </div>
