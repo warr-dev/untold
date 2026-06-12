@@ -105,11 +105,50 @@ We believe that sharing real experiences without the pressure of a personal bran
 
 ---
 
-## ✦ Production Deployment
+## ✦ Deploying to Vercel
 
-To package the application for optimized production serving:
+Untold is fully optimized for serverless Edge hosting on the Vercel platform.
+
+### Step-by-Step Vercel Deployment
+
+1. **Install Vercel CLI (if not already installed):**
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Link and deploy the project:**
+   Run the following command in the project root:
+   ```bash
+   vercel
+   ```
+   Follow the prompts to log in and link the directory to your Vercel project.
+
+3. **Configure the Database Environment Variable:**
+   * Untold requires a **Neon Serverless PostgreSQL** database connection.
+   * Add the `DATABASE_URL` environment variable using Vercel CLI:
+     ```bash
+     vercel env add DATABASE_URL production
+     ```
+     *(Paste your Neon database connection string when prompted)*
+   * Alternatively, add `DATABASE_URL` directly in the Vercel Web Dashboard under **Project Settings > Environment Variables**.
+   * **Note:** If `DATABASE_URL` is omitted, the application will automatically fall back to client-side mode, storing stories and comments in the user's `localStorage` and running fully profile-free/serverless.
+
+4. **Automatic Database Migration:**
+   * Once `DATABASE_URL` is set, you do not need to run manual migration scripts. 
+   * Untold's serverless backend automatically initializes all required tables (`stories`, `comments`, `recoveries`, `tags`) on the first server-action request.
+
+5. **Trigger a Production Release:**
+   Redeploy the application so that Vercel builds the project with the active environment variable:
+   ```bash
+   vercel --prod
+   ```
+
+---
+
+## ✦ Production Servicing (Self-Hosted)
+
+To package and serve the application on standard self-hosted Node environments:
 ```bash
 npm run build
 npm run start
 ```
-The app is fully compatible with serverless Edge platforms (like Vercel).

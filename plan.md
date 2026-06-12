@@ -376,26 +376,25 @@ Small anonymous support communities.
 
 ## Frontend
 
-* Next.js
-* React
+* Next.js 15 (App Router, React 19)
 * TypeScript
-* Tailwind CSS
+* Tailwind CSS v4 (Glassmorphism, custom mesh glow animations)
+* Local client-side fallback/mock mode using `localStorage`
 
 ## Backend
 
-* NestJS
-* Node.js
+* Next.js Server Actions (processed server-side)
+* Cryptographic hashing (SHA-256) via Node's native `crypto` module for privacy-preserving recovery bindings
 
 ## Database
 
-PostgreSQL
+* Neon Serverless PostgreSQL (`@neondatabase/serverless`)
+* Multi-table schema: `stories`, `comments`, `recoveries`, and `tags`
 
 ## Infrastructure
 
-* Docker
-* Kubernetes
-* Cloudflare
-* AWS or GCP
+* Vercel Serverless / Edge Platform
+* Automatic database schema & tables setup on first server-action request
 
 ---
 
