@@ -65,10 +65,11 @@ We believe that sharing real experiences without the pressure of a personal bran
      DATABASE_URL=postgresql://[user]:[password]@[host]/[database]?sslmode=require
      ```
 
-4. Run database migrations and seed default data (optional):
+4. Run database migrations, seed, or clear data (optional):
    ```bash
-   npm run db:migrate
-   npm run db:seed
+   npm run db:migrate  # Create tables
+   npm run db:seed     # Seed standard mock stories & comments
+   npm run db:clear    # Wipe all tables (to start with fresh, real data)
    ```
 
 5. Run the development server:

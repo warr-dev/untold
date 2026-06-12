@@ -120,33 +120,7 @@ function PlatformContent() {
       try {
         const dbStories = await getStories();
         if (dbStories !== null) {
-          // If database is available but empty (new deployment), seed it with INITIAL_STORIES
-          if (dbStories.length === 0) {
-            for (const story of INITIAL_STORIES) {
-              await createStory({
-                id: story.id,
-                authorId: story.authorId,
-                title: story.title,
-                content: story.content,
-                tags: story.tags,
-                auraGradient: story.auraGradient,
-              });
-              for (const comment of story.comments) {
-                await addComment({
-                  id: comment.id,
-                  storyId: story.id,
-                  author: comment.author,
-                  content: comment.content,
-                });
-              }
-            }
-            const reFetched = await getStories();
-            if (reFetched) {
-              setStories(reFetched);
-            }
-          } else {
-            setStories(dbStories);
-          }
+          setStories(dbStories);
         }
       } catch (err) {
         console.error("Failed to load stories from Neon DB:", err);

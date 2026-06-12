@@ -98,7 +98,7 @@ export default function Home() {
     async function loadDbStories() {
       try {
         const dbStories = await getStories();
-        if (dbStories !== null && dbStories.length > 0) {
+        if (dbStories !== null) {
           setStories(dbStories);
         }
       } catch (err) {
