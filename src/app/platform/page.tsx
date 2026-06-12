@@ -308,8 +308,20 @@ function PlatformContent() {
     }
   };
 
-  // Compile unique tags dynamically from current stories feed state
-  const dynamicTags = Array.from(new Set(stories.flatMap((s) => s.tags)));
+  const PRESET_TAGS = [
+    "Jokes",
+    "Funny Moments",
+    "Shower Thoughts",
+    "Confessions",
+    "Life Lessons",
+    "Career",
+    "Mental Health",
+    "Relationships",
+    "Random"
+  ];
+
+  // Compile unique tags dynamically, always ensuring default preset tags are available
+  const dynamicTags = Array.from(new Set([...PRESET_TAGS, ...stories.flatMap((s) => s.tags)]));
 
   // Filter tags list based on tag search query
   const filteredTagsList = dynamicTags.filter((tag) =>
