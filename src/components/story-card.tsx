@@ -12,6 +12,7 @@ export interface CommentData {
 
 export interface StoryProps {
   id: string;
+  authorId: string; // Persistent unique anonymous author ID
   title: string;
   content: string;
   tags: string[]; // e.g., ["Jokes", "Random", "Funny Moments"]
@@ -26,6 +27,8 @@ interface StoryCardProps {
   upvotes?: number;
   hasUpvoted?: boolean;
   onUpvoteClick?: () => void;
+  isFollowing?: boolean;
+  onFollowToggle?: () => void;
   comments?: CommentData[];
   onAddComment?: (commentText: string) => void;
   onOpenDetails?: () => void;
@@ -36,6 +39,8 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   upvotes: propUpvotes,
   hasUpvoted: propHasUpvoted,
   onUpvoteClick,
+  isFollowing = false,
+  onFollowToggle,
   comments: propComments,
   onAddComment,
   onOpenDetails,
@@ -97,7 +102,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
         onOpenDetails ? "min-h-[350px] h-[350px] cursor-pointer" : "h-auto"
       }`}
     >
-      {/* Upper row: Avatar aura & Tags row & Time */}
+      {/* Upper row: Avatar aura & Tags row & Time / Follow */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           {/* HSL Gradient aura avatar */}
@@ -119,7 +124,26 @@ export const StoryCard: React.FC<StoryCardProps> = ({
             ))}
           </div>
         </div>
-        <span className="text-xs text-zinc-400 dark:text-zinc-505 flex-shrink-0 ml-2">{story.timeAgo}</span>
+
+        {/* Time and Follow Action */}
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <span className="text-xs text-zinc-400 dark:text-zinc-505">{story.timeAgo}</span>
+          {onFollowToggle && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onFollowToggle();
+              }}
+              className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border transition-all duration-300 cursor-pointer ${
+                isFollowing
+                  ? "bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo dark:text-brand-lavender"
+                  : "border-zinc-200 hover:bg-zinc-50 dark:border-white/5 dark:hover:bg-white/5 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Title */}

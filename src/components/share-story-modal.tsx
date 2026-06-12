@@ -7,7 +7,7 @@ import { StoryProps } from "./story-card";
 interface ShareStoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (newStory: Omit<StoryProps, "id" | "timeAgo" | "auraGradient" | "upvotes" | "comments">) => void;
+  onSubmit: (newStory: Omit<StoryProps, "id" | "authorId" | "timeAgo" | "auraGradient" | "upvotes" | "comments">) => void;
 }
 
 const PRESET_TAGS = [

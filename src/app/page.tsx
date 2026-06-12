@@ -8,6 +8,7 @@ import { StoryCard, StoryProps } from "../components/story-card";
 const INITIAL_STORIES: StoryProps[] = [
   {
     id: "1",
+    authorId: "auth_1",
     title: "Why did the developer go broke?",
     tags: ["Jokes", "Random"],
     content: "Because he used up all his cache!\n\nSeriously though, I spent three hours debugging a production issue yesterday only to realize my browser was serving a cached version of the old script. Clear your caches, folks. It saves marriages.",
@@ -21,6 +22,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "2",
+    authorId: "auth_2",
     title: "The Zoom Meeting Fiasco",
     tags: ["Funny Moments", "Random"],
     content: "I was in a very serious client pitch yesterday. I stood up to grab my water, completely forgetting I was wearing a formal shirt on top... and literal SpongeBob pajama bottoms.\n\nMy client stopped mid-sentence, stared, and said, 'Nice trousers, Bob.' My boss facepalmed so hard I heard it through the audio. We ended up winning the contract anyway, probably out of sheer pity.",
@@ -33,6 +35,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "3",
+    authorId: "auth_3",
     title: "The Promotion I Didn't Want",
     tags: ["Career", "Confessions"],
     content: "Last month, I was promoted to engineering director. Everyone celebrated. My parents called to say how proud they were, and my peers congratulated me on 'making it.'\n\nBut inside, I feel a suffocating weight. I loved writing code, fixing bugs, and collaborating on technical problems. Now, my days are filled with spreadsheets, political alignment meetings, and performance reviews. I go home feeling empty. I want to ask to step down, but the fear of professional embarrassment and looking like a failure is keeping me silent. So daily, I wear the mask of a successful leader.",
@@ -45,6 +48,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "4",
+    authorId: "auth_4",
     title: "If we clean a vacuum cleaner...",
     tags: ["Shower Thoughts", "Random"],
     content: "If you clean a vacuum cleaner, do you become the vacuum cleaner?\n\nI was cleaning the dust filter on our Dyson this morning and this thought hit me. I've been staring at the wall for twenty minutes questioning the definitions of hygiene and agency.",
@@ -57,6 +61,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "5",
+    authorId: "auth_5",
     title: "Learning to Breathe Again",
     tags: ["Mental Health", "Life Lessons"],
     content: "For three years, panic attacks governed my life. I couldn't go to grocery stores without mapping out the exits. Going to restaurants felt like running a gauntlet. I felt like a broken version of my former self, hiding it from colleagues and friends behind fake excuses.\n\nSix months of therapy and daily practice of sitting in discomfort changed my life. Today, I sat in a crowded coffee shop for an hour, alone, reading a book. No panic. Just the warmth of my cup and the sound of chatter. If you are in the thick of it right now, please know that healing isn't a straight line, but it is possible. Keep breathing.",
@@ -69,10 +74,23 @@ const INITIAL_STORIES: StoryProps[] = [
 
 export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
 
   useEffect(() => {
     // Default theme to dark mode
     document.documentElement.classList.add("dark");
+
+    // Load followed authors on client mount
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("untold_followed_authors");
+      if (saved) {
+        try {
+          setFollowedAuthors(JSON.parse(saved));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -83,6 +101,16 @@ export default function Home() {
       document.documentElement.classList.add("dark");
       setTheme("dark");
     }
+  };
+
+  const handleFollowToggle = (authorId: string) => {
+    setFollowedAuthors((prev) => {
+      const updated = prev.includes(authorId)
+        ? prev.filter((id) => id !== authorId)
+        : [...prev, authorId];
+      localStorage.setItem("untold_followed_authors", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   // Find the top 3 stories with the most upvotes
@@ -160,7 +188,7 @@ export default function Home() {
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-zinc-700 dark:text-zinc-300 max-w-2xl leading-relaxed mb-10">
             Publish your funny moments, jokes, shower thoughts, confessions, or silent victories. 
-            Connect with others through supportive upvotes and genuine conversations, completely profile-free.
+            Connect with others through supportive upvotes, follow anonymous authors, and enjoy genuine profile-free sharing.
           </p>
 
           {/* Hero CTAs */}
@@ -183,7 +211,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12 w-full max-w-3xl pt-10 border-t border-zinc-200/50 dark:border-white/5">
             {[
               { val: "No Profiles", desc: "No identity exposure" },
-              { val: "No Followers", desc: "Equal voice for everyone" },
+              { val: "Follow Auras", desc: "Subscribe to anonymous voices" },
               { val: "Supportive Upvotes", desc: "Show connection directly" },
               { val: "Pure Privacy", desc: "No cookies or trackers" }
             ].map((stat, i) => (
@@ -232,6 +260,8 @@ export default function Home() {
                   </div>
                   <StoryCard
                     story={story}
+                    isFollowing={followedAuthors.includes(story.authorId)}
+                    onFollowToggle={() => handleFollowToggle(story.authorId)}
                     onOpenDetails={() => {
                       if (typeof window !== "undefined") {
                         window.location.href = `/platform?storyId=${story.id}`;
@@ -261,7 +291,7 @@ export default function Home() {
             {/* Traditional Social */}
             <div className="p-8 rounded-2xl border border-zinc-200 bg-white dark:bg-zinc-900/10 dark:border-zinc-800/50 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-505 uppercase tracking-widest block mb-4">
+                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-550 uppercase tracking-widest block mb-4">
                   Traditional Social Platforms
                 </span>
                 <h3 className="text-2xl font-bold font-serif text-zinc-700 dark:text-zinc-400 mb-6">
@@ -286,7 +316,7 @@ export default function Home() {
                   </li>
                 </ul>
               </div>
-              <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/50 text-xs italic text-zinc-400">
+              <div className="mt-8 pt-6 border-t border-zinc-105 dark:border-zinc-800/50 text-xs italic text-zinc-400">
                 Connection based on popularity and vanity.
               </div>
             </div>
@@ -318,7 +348,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-brand-teal font-bold">✓</span>
-                    <span>No topic boundaries: Share a joke, a deep secret, a funny mistake, or a struggle.</span>
+                    <span>Follow Auras: Follow specific anonymous writers by their aura code to read all their stories.</span>
                   </li>
                 </ul>
               </div>
@@ -382,7 +412,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200/50 dark:border-white/5 bg-background transition-colors py-12 text-center text-xs text-zinc-500 dark:text-zinc-400">
+      <footer className="border-t border-zinc-200/50 dark:border-white/5 bg-background transition-colors py-12 text-center text-xs text-zinc-505 dark:text-zinc-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
           <div className="flex items-center gap-2">
             <LogoIcon size={24} className="text-brand-indigo dark:text-brand-lavender" />

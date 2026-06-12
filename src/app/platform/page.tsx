@@ -9,6 +9,7 @@ import { ShareStoryModal } from "../../components/share-story-modal";
 const INITIAL_STORIES: StoryProps[] = [
   {
     id: "1",
+    authorId: "auth_1",
     title: "Why did the developer go broke?",
     tags: ["Jokes", "Random"],
     content: "Because he used up all his cache!\n\nSeriously though, I spent three hours debugging a production issue yesterday only to realize my browser was serving a cached version of the old script. Clear your caches, folks. It saves marriages.",
@@ -22,6 +23,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "2",
+    authorId: "auth_2",
     title: "The Zoom Meeting Fiasco",
     tags: ["Funny Moments", "Random"],
     content: "I was in a very serious client pitch yesterday. I stood up to grab my water, completely forgetting I was wearing a formal shirt on top... and literal SpongeBob pajama bottoms.\n\nMy client stopped mid-sentence, stared, and said, 'Nice trousers, Bob.' My boss facepalmed so hard I heard it through the audio. We ended up winning the contract anyway, probably out of sheer pity.",
@@ -34,6 +36,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "3",
+    authorId: "auth_3",
     title: "The Promotion I Didn't Want",
     tags: ["Career", "Confessions"],
     content: "Last month, I was promoted to engineering director. Everyone celebrated. My parents called to say how proud they were, and my peers congratulated me on 'making it.'\n\nBut inside, I feel a suffocating weight. I loved writing code, fixing bugs, and collaborating on technical problems. Now, my days are filled with spreadsheets, political alignment meetings, and performance reviews. I go home feeling empty. I want to ask to step down, but the fear of professional embarrassment and looking like a failure is keeping me silent. So daily, I wear the mask of a successful leader.",
@@ -46,6 +49,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "4",
+    authorId: "auth_4",
     title: "If we clean a vacuum cleaner...",
     tags: ["Shower Thoughts", "Random"],
     content: "If you clean a vacuum cleaner, do you become the vacuum cleaner?\n\nI was cleaning the dust filter on our Dyson this morning and this thought hit me. I've been staring at the wall for twenty minutes questioning the definitions of hygiene and agency.",
@@ -58,6 +62,7 @@ const INITIAL_STORIES: StoryProps[] = [
   },
   {
     id: "5",
+    authorId: "auth_5",
     title: "Learning to Breathe Again",
     tags: ["Mental Health", "Life Lessons"],
     content: "For three years, panic attacks governed my life. I couldn't go to grocery stores without mapping out the exits. Going to restaurants felt like running a gauntlet. I felt like a broken version of my former self, hiding it from colleagues and friends behind fake excuses.\n\nSix months of therapy and daily practice of sitting in discomfort changed my life. Today, I sat in a crowded coffee shop for an hour, alone, reading a book. No panic. Just the warmth of my cup and the sound of chatter. If you are in the thick of it right now, please know that healing isn't a straight line, but it is possible. Keep breathing.",
@@ -71,16 +76,19 @@ const INITIAL_STORIES: StoryProps[] = [
 function PlatformContent() {
   const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
   const [activeUpvotes, setActiveUpvotes] = useState<{ [storyId: string]: boolean }>({});
+  const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
+  const [feedType, setFeedType] = useState<"all" | "following">("all");
   const [selectedTag, setSelectedTag] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailedStoryId, setDetailedStoryId] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [myAuthorId, setMyAuthorId] = useState("");
 
   const searchParams = useSearchParams();
 
-  // Check URL parameters on mount
+  // Check URL parameters and local storage on mount
   useEffect(() => {
     const write = searchParams.get("write");
     if (write === "true") {
@@ -93,6 +101,27 @@ function PlatformContent() {
 
     // Default theme dark
     document.documentElement.classList.add("dark");
+
+    // Load local storage states
+    if (typeof window !== "undefined") {
+      // Followed authors
+      const savedFollowed = localStorage.getItem("untold_followed_authors");
+      if (savedFollowed) {
+        try {
+          setFollowedAuthors(JSON.parse(savedFollowed));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // My persistent author ID
+      let savedAuthorId = localStorage.getItem("untold_my_author_id") || "";
+      if (!savedAuthorId) {
+        savedAuthorId = "author_" + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem("untold_my_author_id", savedAuthorId);
+      }
+      setMyAuthorId(savedAuthorId);
+    }
   }, [searchParams]);
 
   const toggleTheme = () => {
@@ -124,6 +153,16 @@ function PlatformContent() {
         return s;
       })
     );
+  };
+
+  const handleFollowToggle = (authorId: string) => {
+    setFollowedAuthors((prev) => {
+      const updated = prev.includes(authorId)
+        ? prev.filter((id) => id !== authorId)
+        : [...prev, authorId];
+      localStorage.setItem("untold_followed_authors", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleAddComment = (storyId: string, commentText: string) => {
@@ -160,6 +199,7 @@ function PlatformContent() {
 
     const newStory: StoryProps = {
       id: Math.random().toString(36).substr(2, 9),
+      authorId: myAuthorId || "author_temp",
       title: newStoryData.title,
       content: newStoryData.content,
       tags: newStoryData.tags,
@@ -180,14 +220,23 @@ function PlatformContent() {
     tag.toLowerCase().includes(tagSearchQuery.toLowerCase())
   );
 
-  // Filter & Search stories based on tags array selection
+  // Filter & Search stories based on tags array selection and feed mode
   const filteredStories = stories.filter((story) => {
+    // Feed Mode Filter
+    if (feedType === "following" && !followedAuthors.includes(story.authorId)) {
+      return false;
+    }
+
+    // Tag filter
     const matchesTag =
       selectedTag === "All" || story.tags.includes(selectedTag);
+
+    // Keyword Search filter
     const matchesSearch =
       story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       story.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       story.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+
     return matchesTag && matchesSearch;
   });
 
@@ -241,7 +290,7 @@ function PlatformContent() {
 
       {/* Main Layout Grid */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8 items-start">
-        {/* Left Column - Sidebar (Tag selector & Guidelines) */}
+        {/* Left Column - Sidebar (Feed Mode, Tag selector & Guidelines) */}
         <aside className="w-full lg:w-64 flex flex-col gap-6 lg:sticky lg:top-24">
           {/* Mobile search */}
           <div className="w-full md:hidden">
@@ -254,7 +303,49 @@ function PlatformContent() {
             />
           </div>
 
-          {/* Tags panel with sub-search box */}
+          {/* Feed Mode panel */}
+          <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
+            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-3">
+              Feed Mode
+            </h3>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setFeedType("all");
+                  setSelectedTag("All");
+                }}
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 text-left flex items-center justify-between cursor-pointer ${
+                  feedType === "all"
+                    ? "bg-brand-indigo text-white shadow-md shadow-brand-indigo/15 scale-102"
+                    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                }`}
+              >
+                <span>Public Feed</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] bg-black/10 dark:bg-white/10">
+                  {stories.length}
+                </span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setFeedType("following");
+                  setSelectedTag("All");
+                }}
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 text-left flex items-center justify-between cursor-pointer ${
+                  feedType === "following"
+                    ? "bg-brand-indigo text-white shadow-md shadow-brand-indigo/15 scale-102"
+                    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                }`}
+              >
+                <span>Following Voices</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] bg-black/10 dark:bg-white/10">
+                  {followedAuthors.length}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tags panel - Only show in Public Feed or if there are tags */}
           <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
             <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-3">
               Filter by Tag
@@ -342,7 +433,7 @@ function PlatformContent() {
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-200/50 dark:border-white/5">
             <div>
               <h2 className="text-lg font-bold font-serif text-zinc-900 dark:text-zinc-50">
-                {selectedTag} Posts
+                {feedType === "following" ? "Following Feed" : `${selectedTag} Posts`}
               </h2>
               {searchQuery && (
                 <p className="text-xs text-zinc-400 mt-1">
@@ -365,6 +456,8 @@ function PlatformContent() {
                   upvotes={story.upvotes}
                   hasUpvoted={!!activeUpvotes[story.id]}
                   onUpvoteClick={() => handleUpvote(story.id)}
+                  isFollowing={followedAuthors.includes(story.authorId)}
+                  onFollowToggle={() => handleFollowToggle(story.authorId)}
                   comments={story.comments}
                   onAddComment={(text) => handleAddComment(story.id, text)}
                   onOpenDetails={() => setDetailedStoryId(story.id)}
@@ -372,20 +465,40 @@ function PlatformContent() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-24 glass-panel rounded-2xl border border-zinc-200 dark:border-white/5">
-              <QuoteIcon className="mx-auto text-zinc-200 dark:text-zinc-800 mb-4" size={48} />
-              <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200 mb-1">
-                No matching posts
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-500 mb-6">
-                Be the first to share something with the tag &quot;{selectedTag}&quot;.
-              </p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-5 py-2.5 bg-brand-indigo text-white rounded-xl text-xs font-bold hover:bg-brand-indigo/90 transition-colors"
-              >
-                Share Something
-              </button>
+            <div className="text-center py-24 glass-panel rounded-2xl border border-zinc-200 dark:border-white/5 flex flex-col items-center justify-center p-8">
+              <QuoteIcon className="text-zinc-200 dark:text-zinc-800 mb-4" size={48} />
+              
+              {feedType === "following" ? (
+                <>
+                  <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200 mb-1">
+                    Your Following Feed is empty
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500 mb-6 max-w-sm">
+                    You aren't following any anonymous writers yet. Go to the **Public Feed** and click **Follow** on headers of stories you connect with to subscribe to their voice.
+                  </p>
+                  <button
+                    onClick={() => setFeedType("all")}
+                    className="px-5 py-2.5 bg-brand-indigo text-white rounded-xl text-xs font-bold hover:bg-brand-indigo/90 transition-colors"
+                  >
+                    Go to Public Feed
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200 mb-1">
+                    No matching posts
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500 mb-6">
+                    Be the first to share something with the tag &quot;{selectedTag}&quot;.
+                  </p>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-5 py-2.5 bg-brand-indigo text-white rounded-xl text-xs font-bold hover:bg-brand-indigo/90 transition-colors"
+                  >
+                    Share Something
+                  </button>
+                </>
+              )}
             </div>
           )}
         </section>
@@ -430,6 +543,8 @@ function PlatformContent() {
                 upvotes={detailedStory.upvotes}
                 hasUpvoted={!!activeUpvotes[detailedStory.id]}
                 onUpvoteClick={() => handleUpvote(detailedStory.id)}
+                isFollowing={followedAuthors.includes(detailedStory.authorId)}
+                onFollowToggle={() => handleFollowToggle(detailedStory.authorId)}
                 comments={detailedStory.comments}
                 onAddComment={(text) => handleAddComment(detailedStory.id, text)}
               />
