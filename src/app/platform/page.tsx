@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { LogoIcon, SunIcon, MoonIcon, PlusIcon, CloseIcon, QuoteIcon } from "../../components/icons";
 import { StoryCard, StoryProps } from "../../components/story-card";
 import { ShareStoryModal } from "../../components/share-story-modal";
+import { RecoveryModal } from "../../components/recovery-modal";
 
 const INITIAL_STORIES: StoryProps[] = [
   {
@@ -86,6 +87,11 @@ function PlatformContent() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [myAuthorId, setMyAuthorId] = useState("");
 
+  // Recovery States
+  const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
+  const [isRecoveryBound, setIsRecoveryBound] = useState(false);
+  const [maskedContact, setMaskedContact] = useState("");
+
   const searchParams = useSearchParams();
 
   // Check URL parameters and local storage on mount
@@ -121,6 +127,18 @@ function PlatformContent() {
         localStorage.setItem("untold_my_author_id", savedAuthorId);
       }
       setMyAuthorId(savedAuthorId);
+
+      // Recovery binding contact state
+      const savedContact = localStorage.getItem("untold_recovery_contact");
+      if (savedContact) {
+        setIsRecoveryBound(true);
+        if (savedContact.includes("@")) {
+          const parts = savedContact.split("@");
+          setMaskedContact(parts[0].slice(0, 2) + "***@" + parts[1]);
+        } else {
+          setMaskedContact(savedContact.slice(0, 3) + "*****" + savedContact.slice(-3));
+        }
+      }
     }
   }, [searchParams]);
 
@@ -317,7 +335,7 @@ function PlatformContent() {
                 className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 text-left flex items-center justify-between cursor-pointer ${
                   feedType === "all"
                     ? "bg-brand-indigo text-white shadow-md shadow-brand-indigo/15 scale-102"
-                    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                    : "bg-zinc-100 hover:bg-zinc-205 text-zinc-550 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
                 }`}
               >
                 <span>Public Feed</span>
@@ -334,7 +352,7 @@ function PlatformContent() {
                 className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all duration-300 text-left flex items-center justify-between cursor-pointer ${
                   feedType === "following"
                     ? "bg-brand-indigo text-white shadow-md shadow-brand-indigo/15 scale-102"
-                    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                    : "bg-zinc-100 hover:bg-zinc-205 text-zinc-550 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
                 }`}
               >
                 <span>Following Voices</span>
@@ -345,9 +363,9 @@ function PlatformContent() {
             </div>
           </div>
 
-          {/* Tags panel - Only show in Public Feed or if there are tags */}
+          {/* Tags panel */}
           <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
-            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-3">
+            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-550 mb-3">
               Filter by Tag
             </h3>
             
@@ -398,11 +416,58 @@ function PlatformContent() {
               ))}
 
               {filteredTagsList.length === 0 && (
-                <p className="text-[10px] italic text-zinc-400 dark:text-zinc-505 py-2">
+                <p className="text-[10px] italic text-zinc-400 dark:text-zinc-550 py-2">
                   No tags found
                 </p>
               )}
             </nav>
+          </div>
+
+          {/* Voice Security & Recovery Widget */}
+          <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
+            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-2.5">
+              Voice Security
+            </h3>
+            {isRecoveryBound ? (
+              <div className="text-xs space-y-2.5">
+                <p className="text-zinc-650 dark:text-zinc-400 text-[10px] leading-relaxed">
+                  ✓ Your voice signature is securely bound.
+                </p>
+                <div className="py-2 px-1 rounded-xl bg-brand-teal/5 text-brand-teal border border-brand-teal/10 text-[10px] font-mono break-all text-center">
+                  Bound to: {maskedContact}
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("untold_recovery_contact");
+                    localStorage.removeItem("untold_recovery_type");
+                    setIsRecoveryBound(false);
+                    setMaskedContact("");
+                  }}
+                  className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                >
+                  Remove Recovery Binding
+                </button>
+              </div>
+            ) : (
+              <div className="text-xs space-y-3">
+                <p className="text-zinc-505 dark:text-zinc-400 text-[11px] leading-relaxed">
+                  Secure your anonymous voice in case you clear browser cookies or switch devices.
+                </p>
+                <button
+                  onClick={() => setIsRecoveryModalOpen(true)}
+                  className="w-full py-2 px-3 bg-zinc-100 hover:bg-zinc-205 text-zinc-700 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10 text-[11px] font-bold rounded-xl border border-zinc-200 dark:border-white/5 transition-all text-center cursor-pointer"
+                >
+                  Setup Recovery Contact
+                </button>
+              </div>
+            )}
+            
+            {!isRecoveryBound && (
+              <div className="mt-3 pt-3 border-t border-zinc-150 dark:border-white/5 flex flex-col gap-1 text-[10px] text-zinc-400">
+                <span>Current ID:</span>
+                <span className="font-mono text-brand-indigo dark:text-brand-lavender break-all">{myAuthorId}</span>
+              </div>
+            )}
           </div>
 
           {/* Guidelines Box */}
@@ -436,7 +501,7 @@ function PlatformContent() {
                 {feedType === "following" ? "Following Feed" : `${selectedTag} Posts`}
               </h2>
               {searchQuery && (
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-zinc-405 mt-1">
                   Showing matches for &quot;{searchQuery}&quot;
                 </p>
               )}
@@ -473,12 +538,12 @@ function PlatformContent() {
                   <h3 className="text-base font-bold text-zinc-800 dark:text-zinc-200 mb-1">
                     Your Following Feed is empty
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-500 mb-6 max-w-sm">
+                  <p className="text-xs text-zinc-550 dark:text-zinc-400 mb-6 max-w-sm leading-relaxed">
                     You aren't following any anonymous writers yet. Go to the **Public Feed** and click **Follow** on headers of stories you connect with to subscribe to their voice.
                   </p>
                   <button
                     onClick={() => setFeedType("all")}
-                    className="px-5 py-2.5 bg-brand-indigo text-white rounded-xl text-xs font-bold hover:bg-brand-indigo/90 transition-colors"
+                    className="px-5 py-2.5 bg-brand-indigo text-white rounded-xl text-xs font-bold hover:bg-brand-indigo/90 transition-colors cursor-pointer"
                   >
                     Go to Public Feed
                   </button>
@@ -509,6 +574,26 @@ function PlatformContent() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateStory}
+      />
+
+      {/* Recovery Modal */}
+      <RecoveryModal
+        isOpen={isRecoveryModalOpen}
+        onClose={() => setIsRecoveryModalOpen(false)}
+        currentAuthorId={myAuthorId}
+        onBindSuccess={(contact) => {
+          setIsRecoveryBound(true);
+          if (contact.includes("@")) {
+            const parts = contact.split("@");
+            setMaskedContact(parts[0].slice(0, 2) + "***@" + parts[1]);
+          } else {
+            setMaskedContact(contact.slice(0, 3) + "*****" + contact.slice(-3));
+          }
+        }}
+        onRestoreSuccess={(recoveredId) => {
+          setMyAuthorId(recoveredId);
+          localStorage.setItem("untold_my_author_id", recoveredId);
+        }}
       />
 
       {/* Story Detail Modal */}
