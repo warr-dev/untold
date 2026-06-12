@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { CloseIcon } from "./icons";
 import { StoryProps } from "./story-card";
 
@@ -30,6 +30,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
 
+  const inputRef = useRef<HTMLInputElement>(null);
   const maxChars = 1500;
 
   useEffect(() => {
@@ -46,29 +47,12 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
 
   if (!isOpen) return null;
 
-  const handleTagToggle = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      // Must keep at least one tag
-      if (selectedTags.length > 1) {
-        setSelectedTags((prev) => prev.filter((t) => t !== tag));
-        setError("");
-      } else {
-        setError("Please select at least one tag.");
-      }
-    } else {
-      if (selectedTags.length < 5) {
-        setSelectedTags((prev) => [...prev, tag]);
-        setError("");
-      } else {
-        setError("You can select up to 5 tags.");
-      }
+  const handleAddTag = (tagText: string) => {
+    const cleanTag = tagText.trim().replace(/[^a-zA-Z0-9\s]/g, "");
+    if (!cleanTag) {
+      setNewTagInput("");
+      return;
     }
-  };
-
-  const handleAddCustomTag = (e: React.MouseEvent | React.FormEvent) => {
-    e.preventDefault();
-    const cleanTag = newTagInput.trim().replace(/[^a-zA-Z0-9\s]/g, "");
-    if (!cleanTag) return;
 
     // Capitalize first letter of each word
     const formattedTag = cleanTag
@@ -84,11 +68,22 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
 
     if (selectedTags.length >= 5) {
       setError("You can select up to 5 tags.");
+      setNewTagInput("");
       return;
     }
 
     setSelectedTags((prev) => [...prev, formattedTag]);
     setNewTagInput("");
+    setError("");
+
+    // Auto focus back to input
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 10);
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setSelectedTags((prev) => prev.filter((t) => t !== tag));
     setError("");
   };
 
@@ -181,87 +176,88 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
             />
           </div>
 
-          {/* Tags Selection & Dynamic Creation */}
+          {/* Tagify-like Tag Input Container */}
           <div>
             <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-              Select Tags (Choose 1 to 5)
+              Tags (Choose 1 to 5)
             </label>
-            
-            {/* Preset pills */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              {PRESET_TAGS.map((t) => {
-                const isSelected = selectedTags.includes(t);
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => handleTagToggle(t)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
-                      isSelected
-                        ? "bg-brand-indigo text-white scale-105 shadow-sm shadow-brand-indigo/15"
-                        : "bg-zinc-100 hover:bg-zinc-205 text-zinc-505 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-            </div>
 
-            {/* Custom Tag Input */}
-            <div className="flex gap-2">
+            {/* Inline tag editor wrapper */}
+            <div 
+              onClick={() => inputRef.current?.focus()}
+              className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-805 dark:text-zinc-100 focus-within:ring-1 focus-within:ring-brand-indigo focus-within:border-brand-indigo min-h-[46px] cursor-text transition-colors"
+            >
+              {/* Selected Tag Pills */}
+              {selectedTags.map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1 bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/25 dark:text-brand-lavender text-xs font-bold px-2.5 py-1 rounded-lg border border-brand-indigo/15 animate-scaleIn select-none"
+                >
+                  <span>{t}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveTag(t);
+                    }}
+                    className="text-[9px] opacity-60 hover:opacity-100 hover:text-rose-500 font-extrabold cursor-pointer transition-colors"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+
+              {/* Borderless Input Field */}
               <input
+                ref={inputRef}
                 type="text"
                 value={newTagInput}
-                onChange={(e) => setNewTagInput(e.target.value)}
+                onChange={(e) => {
+                  setNewTagInput(e.target.value);
+                  setError("");
+                }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" || e.key === "," || e.key === " ") {
                     e.preventDefault();
-                    handleAddCustomTag(e);
+                    handleAddTag(newTagInput);
+                  } else if (e.key === "Backspace" && !newTagInput && selectedTags.length > 0) {
+                    handleRemoveTag(selectedTags[selectedTags.length - 1]);
                   }
                 }}
-                placeholder="Type custom tag and click add..."
+                placeholder={selectedTags.length === 0 ? "Type tag and press Enter..." : ""}
                 maxLength={20}
-                className="flex-1 px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-sm"
+                className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 py-1 px-1 focus:ring-0 focus:outline-none"
               />
-              <button
-                type="button"
-                onClick={handleAddCustomTag}
-                className="px-5 py-3 text-xs font-bold text-white bg-brand-indigo hover:bg-brand-indigo/90 rounded-xl transition-colors flex items-center justify-center"
-              >
-                Add Tag
-              </button>
             </div>
 
-            {/* Selected Custom Tags (if not in presets) */}
-            {selectedTags.some((tag) => !PRESET_TAGS.includes(tag)) && (
-              <div className="mt-3.5">
-                <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block mb-2">
-                  Custom Tags Added:
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {selectedTags
-                    .filter((tag) => !PRESET_TAGS.includes(tag))
-                    .map((tag) => (
-                      <span
-                        key={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        className="cursor-pointer text-[10px] font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-lavender border border-brand-indigo/20 hover:bg-brand-indigo/20 hover:text-brand-indigo dark:hover:bg-brand-indigo/30 transition-all duration-200 flex items-center gap-1.5"
-                      >
-                        <span>{tag}</span>
-                        <span className="text-[9px] opacity-60">✕</span>
-                      </span>
-                    ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Show local notice if tags is empty */}
+            {/* Validation warning */}
             {selectedTags.length === 0 && (
               <p className="text-[10px] text-rose-500 mt-2 font-semibold">
                 Please select at least one tag.
               </p>
             )}
+
+            {/* Popular preset suggestions */}
+            <div className="mt-3.5">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block mb-2">
+                Popular Suggestions:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {PRESET_TAGS.filter((tag) => !selectedTags.includes(tag)).map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddTag(tag);
+                    }}
+                    className="text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10 transition-all cursor-pointer"
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Story Content */}
