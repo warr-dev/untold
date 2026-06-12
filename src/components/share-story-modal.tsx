@@ -10,7 +10,7 @@ interface ShareStoryModalProps {
   onSubmit: (newStory: Omit<StoryProps, "id" | "timeAgo" | "auraGradient" | "upvotes" | "comments">) => void;
 }
 
-const TAGS = [
+const PRESET_TAGS = [
   "Jokes",
   "Funny Moments",
   "Shower Thoughts",
@@ -25,7 +25,8 @@ const TAGS = [
 export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([TAGS[0]]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,20 +48,42 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
 
   const handleTagToggle = (tag: string) => {
     if (selectedTags.includes(tag)) {
-      // Must keep at least one tag
-      if (selectedTags.length > 1) {
-        setSelectedTags((prev) => prev.filter((t) => t !== tag));
-      } else {
-        setError("Please select at least one tag.");
-      }
+      setSelectedTags((prev) => prev.filter((t) => t !== tag));
     } else {
-      if (selectedTags.length < 3) {
+      if (selectedTags.length < 5) {
         setSelectedTags((prev) => [...prev, tag]);
-        setError(""); // Clear error if one exists
+        setError("");
       } else {
-        setError("You can select up to 3 tags.");
+        setError("You can select up to 5 tags.");
       }
     }
+  };
+
+  const handleAddCustomTag = (e: React.MouseEvent | React.FormEvent) => {
+    e.preventDefault();
+    const cleanTag = newTagInput.trim().replace(/[^a-zA-Z0-9\s]/g, "");
+    if (!cleanTag) return;
+
+    // Capitalize first letter of each word
+    const formattedTag = cleanTag
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join("");
+
+    if (selectedTags.includes(formattedTag)) {
+      setError("This tag is already added.");
+      setNewTagInput("");
+      return;
+    }
+
+    if (selectedTags.length >= 5) {
+      setError("You can select up to 5 tags.");
+      return;
+    }
+
+    setSelectedTags((prev) => [...prev, formattedTag]);
+    setNewTagInput("");
+    setError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,10 +92,6 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
 
     if (!title.trim()) {
       setError("Please write a title.");
-      return;
-    }
-    if (selectedTags.length === 0) {
-      setError("Please select at least one tag.");
       return;
     }
     if (!content.trim() || content.length < 20) {
@@ -93,7 +112,8 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
     // Reset fields
     setTitle("");
     setContent("");
-    setSelectedTags([TAGS[0]]);
+    setSelectedTags([]);
+    setNewTagInput("");
     setAgreed(false);
     onClose();
   };
@@ -107,7 +127,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
       />
 
       {/* Modal Content */}
-      <div className="glass-panel relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0d0c24] p-6 shadow-2xl animate-scaleIn transition-all duration-300 border border-zinc-200 dark:border-white/10 max-h-[90vh] overflow-y-auto">
+      <div className="glass-panel relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#0d0c24] p-6 shadow-2xl animate-scaleIn transition-all duration-350 border border-zinc-200 dark:border-white/10 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-150 dark:border-white/5 mb-6">
           <div>
@@ -151,23 +171,25 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
             />
           </div>
 
-          {/* Tags Selection pills */}
+          {/* Tags Selection & Dynamic Creation */}
           <div>
             <label className="block text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-              Select Tags (Choose 1 to 3)
+              Select Tags (Optional, Choose up to 5)
             </label>
-            <div className="flex flex-wrap gap-2">
-              {TAGS.map((t) => {
+            
+            {/* Preset pills */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {PRESET_TAGS.map((t) => {
                 const isSelected = selectedTags.includes(t);
                 return (
                   <button
                     key={t}
                     type="button"
                     onClick={() => handleTagToggle(t)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
                       isSelected
                         ? "bg-brand-indigo text-white scale-105 shadow-sm shadow-brand-indigo/15"
-                        : "bg-zinc-100 hover:bg-zinc-205 text-zinc-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                        : "bg-zinc-100 hover:bg-zinc-205 text-zinc-505 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
                     }`}
                   >
                     {t}
@@ -175,6 +197,54 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
                 );
               })}
             </div>
+
+            {/* Custom Tag Input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTagInput}
+                onChange={(e) => setNewTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCustomTag(e);
+                  }
+                }}
+                placeholder="Type custom tag and click add..."
+                maxLength={20}
+                className="flex-1 px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomTag}
+                className="px-5 py-3 text-xs font-bold text-white bg-brand-indigo hover:bg-brand-indigo/90 rounded-xl transition-colors flex items-center justify-center"
+              >
+                Add Tag
+              </button>
+            </div>
+
+            {/* Selected Custom Tags (if not in presets) */}
+            {selectedTags.some((tag) => !PRESET_TAGS.includes(tag)) && (
+              <div className="mt-3.5">
+                <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block mb-2">
+                  Custom Tags Added:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTags
+                    .filter((tag) => !PRESET_TAGS.includes(tag))
+                    .map((tag) => (
+                      <span
+                        key={tag}
+                        onClick={() => handleTagToggle(tag)}
+                        className="cursor-pointer text-[10px] font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-lavender border border-brand-indigo/20 hover:bg-brand-indigo/20 hover:text-brand-indigo dark:hover:bg-brand-indigo/30 transition-all duration-200 flex items-center gap-1.5"
+                      >
+                        <span>{tag}</span>
+                        <span className="text-[9px] opacity-60">✕</span>
+                      </span>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Story Content */}
@@ -195,7 +265,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
               className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-sm leading-relaxed"
               required
             />
-            <p className="text-[11px] text-zinc-400 dark:text-zinc-505 mt-1">
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-550 mt-1">
               Minimum 20 characters. Share jokes, funny stories, or whatever is on your mind.
             </p>
           </div>

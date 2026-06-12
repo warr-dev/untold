@@ -68,19 +68,6 @@ const INITIAL_STORIES: StoryProps[] = [
   }
 ];
 
-const TAGS = [
-  "All",
-  "Jokes",
-  "Funny Moments",
-  "Shower Thoughts",
-  "Confessions",
-  "Life Lessons",
-  "Career",
-  "Mental Health",
-  "Relationships",
-  "Random"
-];
-
 function PlatformContent() {
   const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
   const [activeUpvotes, setActiveUpvotes] = useState<{ [storyId: string]: boolean }>({});
@@ -184,7 +171,13 @@ function PlatformContent() {
     setStories((prev) => [newStory, ...prev]);
   };
 
-  // Filter & Search stories based on tags array
+  // Compile the list of unique tags dynamically from current stories
+  const dynamicTags = [
+    "All",
+    ...Array.from(new Set(stories.flatMap((s) => s.tags)))
+  ];
+
+  // Filter & Search stories based on tags array selection
   const filteredStories = stories.filter((story) => {
     const matchesTag =
       selectedTag === "All" || story.tags.includes(selectedTag);
@@ -207,7 +200,7 @@ function PlatformContent() {
                 Untold
               </span>
             </a>
-            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded bg-zinc-200 text-zinc-755 dark:bg-white/5 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded bg-zinc-200 text-zinc-700 dark:bg-white/5 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
               Sharing Hub
             </span>
           </div>
@@ -264,7 +257,7 @@ function PlatformContent() {
               Filter by Tag
             </h3>
             <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none">
-              {TAGS.map((tag) => (
+              {dynamicTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => setSelectedTag(tag)}
@@ -292,7 +285,7 @@ function PlatformContent() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-teal font-bold">✓</span>
-                <span>Select multiple tags (up to 3) to classify your post.</span>
+                <span>Add any custom tag or select presets when sharing.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-teal font-bold">✓</span>
