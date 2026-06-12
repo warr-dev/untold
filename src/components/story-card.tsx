@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { HeartIcon, HandsIcon, LightbulbIcon, SproutIcon, EyeIcon } from "./icons";
-
-export interface ReactionData {
-  relate: number;
-  alone: number;
-  thank: number;
-  help: number;
-}
+import { ArrowUpIcon, EyeIcon } from "./icons";
 
 export interface CommentData {
   id: string;
@@ -21,18 +14,18 @@ export interface StoryProps {
   id: string;
   title: string;
   content: string;
-  category: string;
+  tag: string; // "Jokes", "Funny Moments", "Confessions", etc.
   timeAgo: string;
-  auraGradient: string; // e.g., "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)"
-  reactions: ReactionData;
+  auraGradient: string; // HSL gradient aura
+  upvotes: number;
   comments: CommentData[];
 }
 
 interface StoryCardProps {
   story: StoryProps;
-  reactions?: ReactionData;
-  activeReactions?: { [key: string]: boolean };
-  onReactionClick?: (type: keyof ReactionData) => void;
+  upvotes?: number;
+  hasUpvoted?: boolean;
+  onUpvoteClick?: () => void;
   comments?: CommentData[];
   onAddComment?: (commentText: string) => void;
   onOpenDetails?: () => void;
@@ -40,27 +33,22 @@ interface StoryCardProps {
 
 export const StoryCard: React.FC<StoryCardProps> = ({
   story,
-  reactions: propReactions,
-  activeReactions: propActiveReactions,
-  onReactionClick,
+  upvotes: propUpvotes,
+  hasUpvoted: propHasUpvoted,
+  onUpvoteClick,
   comments: propComments,
   onAddComment,
   onOpenDetails,
 }) => {
-  const [localReactions, setLocalReactions] = useState<ReactionData>(story.reactions);
-  const [localActiveReactions, setLocalActiveReactions] = useState<{ [key: string]: boolean }>({
-    relate: false,
-    alone: false,
-    thank: false,
-    help: false,
-  });
+  const [localUpvotes, setLocalUpvotes] = useState<number>(story.upvotes);
+  const [localHasUpvoted, setLocalHasUpvoted] = useState<boolean>(false);
   const [localComments, setLocalComments] = useState<CommentData[]>(story.comments);
 
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
 
-  const reactions = propReactions ?? localReactions;
-  const activeReactions = propActiveReactions ?? localActiveReactions;
+  const upvotesCount = propUpvotes ?? localUpvotes;
+  const isUpvoted = propHasUpvoted ?? localHasUpvoted;
   const commentsList = propComments ?? localComments;
 
   // Lists of adjectives and nouns to generate a random anonymous commenter name
@@ -73,16 +61,13 @@ export const StoryCard: React.FC<StoryCardProps> = ({
     return `${adj} ${noun}`;
   };
 
-  const handleReactionClick = (type: keyof ReactionData) => {
-    if (onReactionClick) {
-      onReactionClick(type);
+  const handleUpvoteClick = () => {
+    if (onUpvoteClick) {
+      onUpvoteClick();
     } else {
-      const isActive = localActiveReactions[type];
-      setLocalActiveReactions((prev) => ({ ...prev, [type]: !isActive }));
-      setLocalReactions((prev) => ({
-        ...prev,
-        [type]: isActive ? prev[type] - 1 : prev[type] + 1,
-      }));
+      const active = !localHasUpvoted;
+      setLocalHasUpvoted(active);
+      setLocalUpvotes((prev) => (active ? prev + 1 : prev - 1));
     }
   };
 
@@ -112,7 +97,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
         onOpenDetails ? "min-h-[350px] h-[350px] cursor-pointer" : "h-auto"
       }`}
     >
-      {/* Upper row: Avatar aura & Category & Time */}
+      {/* Upper row: Avatar aura & Tag & Time */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           {/* HSL Gradient aura avatar */}
@@ -124,7 +109,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
           </div>
           <div>
             <span className="text-xs font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-lavender">
-              {story.category}
+              {story.tag}
             </span>
           </div>
         </div>
@@ -160,82 +145,27 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
       {/* Interaction Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-        {/* Empathy Reactions */}
-        <div className="flex flex-wrap gap-2">
-          {/* ❤️ I Relate */}
+        {/* Simple Upvote Button */}
+        <div>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleReactionClick("relate");
+              handleUpvoteClick();
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
-              activeReactions.relate
-                ? "bg-rose-500/15 text-rose-500 scale-105"
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+              isUpvoted
+                ? "bg-brand-indigo text-white scale-105 shadow-md shadow-brand-indigo/20"
                 : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
             }`}
           >
-            <HeartIcon
-              className={`transition-transform duration-300 ${activeReactions.relate ? "fill-rose-500 stroke-rose-500 scale-110" : ""}`}
+            <ArrowUpIcon
+              className={`transition-transform duration-300 ${
+                isUpvoted ? "translate-y-[-1px] scale-110 stroke-[3px]" : ""
+              }`}
+              size={15}
             />
-            <span>I Relate</span>
-            <span className="font-semibold">{reactions.relate}</span>
-          </button>
-
-          {/* 🤝 You're Not Alone */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleReactionClick("alone");
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
-              activeReactions.alone
-                ? "bg-brand-lavender/15 text-brand-lavender scale-105"
-                : "bg-zinc-100 text-zinc-505 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
-            }`}
-          >
-            <HandsIcon
-              className={`transition-transform duration-300 ${activeReactions.alone ? "fill-brand-lavender stroke-brand-lavender scale-110" : ""}`}
-            />
-            <span>Not Alone</span>
-            <span className="font-semibold">{reactions.alone}</span>
-          </button>
-
-          {/* 💡 Thank You */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleReactionClick("thank");
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
-              activeReactions.thank
-                ? "bg-amber-500/15 text-amber-500 scale-105"
-                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
-            }`}
-          >
-            <LightbulbIcon
-              className={`transition-transform duration-300 ${activeReactions.thank ? "fill-amber-500/10 stroke-amber-500 scale-110" : ""}`}
-            />
-            <span>Thank You</span>
-            <span className="font-semibold">{reactions.thank}</span>
-          </button>
-
-          {/* 🌱 This Helped Me */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleReactionClick("help");
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
-              activeReactions.help
-                ? "bg-brand-teal/15 text-brand-teal scale-105"
-                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
-            }`}
-          >
-            <SproutIcon
-              className={`transition-transform duration-300 ${activeReactions.help ? "fill-brand-teal/10 stroke-brand-teal scale-110" : ""}`}
-            />
-            <span>Helped Me</span>
-            <span className="font-semibold">{reactions.help}</span>
+            <span>Upvote</span>
+            <span className="font-extrabold">{upvotesCount}</span>
           </button>
         </div>
 
@@ -246,11 +176,11 @@ export const StoryCard: React.FC<StoryCardProps> = ({
               e.stopPropagation();
               setShowComments(!showComments);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-450 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all duration-300"
           >
             <EyeIcon size={16} />
             <span>Comments</span>
-            <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-300 font-bold">
+            <span className="px-1.5 py-0.5 rounded-md bg-zinc-200 dark:bg-zinc-850 text-[10px] text-zinc-650 dark:text-zinc-305 font-bold">
               {commentsList.length}
             </span>
           </button>
@@ -271,14 +201,14 @@ export const StoryCard: React.FC<StoryCardProps> = ({
           {commentsList.length > 0 ? (
             <div className="space-y-3 mb-4 max-h-48 overflow-y-auto pr-1">
               {commentsList.map((comment) => (
-                <div key={comment.id} className="p-3 rounded-lg bg-zinc-50 dark:bg-white/[0.02] border border-zinc-100/50 dark:border-white/[0.02]">
+                <div key={comment.id} className="p-3 rounded-lg bg-zinc-55 dark:bg-white/[0.02] border border-zinc-100/50 dark:border-white/[0.02]">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs font-semibold text-brand-indigo dark:text-brand-lavender">
                       {comment.author}
                     </span>
                     <span className="text-[10px] text-zinc-400">{comment.timeAgo}</span>
                   </div>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-300">{comment.content}</p>
+                  <p className="text-xs text-zinc-650 dark:text-zinc-350">{comment.content}</p>
                 </div>
               ))}
             </div>
@@ -295,7 +225,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a supportive response..."
-              className="flex-1 px-3.5 py-2 text-xs rounded-lg border border-zinc-200 bg-white dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
+              className="flex-1 px-3.5 py-2 text-xs rounded-lg border border-zinc-200 bg-white dark:bg-zinc-900/50 dark:border-zinc-805 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo text-xs"
             />
             <button
               type="submit"

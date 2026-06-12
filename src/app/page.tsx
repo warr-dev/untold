@@ -2,69 +2,68 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { LogoIcon, SunIcon, MoonIcon, PlusIcon, QuoteIcon } from "../components/icons";
+import { LogoIcon, SunIcon, MoonIcon, QuoteIcon } from "../components/icons";
 import { StoryCard, StoryProps } from "../components/story-card";
 
 const INITIAL_STORIES: StoryProps[] = [
   {
     id: "1",
-    title: "The Promotion I Didn't Want",
-    category: "Career",
-    content: "Last month, I was promoted to engineering director. Everyone celebrated. My parents called to say how proud they were, and my peers congratulated me on 'making it.'\n\nBut inside, I feel a suffocating weight. I loved writing code, fixing bugs, and collaborating on technical problems. Now, my days are filled with spreadsheets, political alignment meetings, and performance reviews. I go home feeling empty. I want to ask to step down, but the fear of professional embarrassment and looking like a failure is keeping me silent. So daily, I wear the mask of a successful leader.",
-    timeAgo: "2 hours ago",
-    auraGradient: "linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)",
-    reactions: { relate: 48, alone: 32, thank: 12, help: 5 },
+    title: "Why did the developer go broke?",
+    tag: "Jokes",
+    content: "Because he used up all his cache!\n\nSeriously though, I spent three hours debugging a production issue yesterday only to realize my browser was serving a cached version of the old script. Clear your caches, folks. It saves marriages.",
+    timeAgo: "1 hour ago",
+    auraGradient: "linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)",
+    upvotes: 142,
     comments: [
-      { id: "c1", author: "Empathetic Oak", content: "You're not a failure for knowing what makes you happy. Status isn't worth your daily joy.", timeAgo: "1 hour ago" },
-      { id: "c2", author: "Quiet Flame", content: "I stepped down from a management role back to senior dev 2 years ago. Best decision of my life.", timeAgo: "45 mins ago" }
-    ],
+      { id: "c1", author: "Giggling Sparrow", content: "Certified cache classic. I do this at least once a month.", timeAgo: "45 mins ago" },
+      { id: "c2", author: "Silly Star", content: "Caching is one of the two hardest problems in computer science... along with naming things and off-by-one errors.", timeAgo: "10 mins ago" }
+    ]
   },
   {
     id: "2",
-    title: "Learning to Breathe Again",
-    category: "Mental Health",
-    content: "For three years, panic attacks governed my life. I couldn't go to grocery stores without mapping out the exits. Going to restaurants felt like running a gauntlet. I felt like a broken version of my former self, hiding it from colleagues and friends behind fake excuses.\n\nSix months of therapy and daily practice of sitting in discomfort changed my life. Today, I sat in a crowded coffee shop for an hour, alone, reading a book. No panic. Just the warmth of my cup and the sound of chatter. If you are in the thick of it right now, please know that healing isn't a straight line, but it is possible. Keep breathing.",
-    timeAgo: "5 hours ago",
+    title: "The Zoom Meeting Fiasco",
+    tag: "Funny Moments",
+    content: "I was in a very serious client pitch yesterday. I stood up to grab my water, completely forgetting I was wearing a formal shirt on top... and literal SpongeBob pajama bottoms.\n\nMy client stopped mid-sentence, stared, and said, 'Nice trousers, Bob.' My boss facepalmed so hard I heard it through the audio. We ended up winning the contract anyway, probably out of sheer pity.",
+    timeAgo: "4 hours ago",
     auraGradient: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-    reactions: { relate: 89, alone: 74, thank: 45, help: 28 },
+    upvotes: 312,
     comments: [
-      { id: "c3", author: "Calm River", content: "Needed this today. Currently struggling with agoraphobia. Your success gives me hope.", timeAgo: "3 hours ago" }
-    ],
+      { id: "c3", author: "Cheering Wave", content: "Professionalism is overrated anyway. Spongebob pajamas seal the deal!", timeAgo: "3 hours ago" }
+    ]
   },
   {
     id: "3",
-    title: "I Quit My Stable Job at 35 to Paint",
-    category: "Success Stories",
-    content: "I had a great corporate finance job. Nice salary, dental plan, and retirement matching. But every evening, I would stare at my blank canvas and feel a deep ache. At 35, single and without kids, I decided to take the leap. I resigned, rented a small studio, and committed to painting full-time.\n\nIt has been 8 months. I make less than half of my old salary, and I buy cheaper groceries. But when I wake up in the morning and smell the linseed oil, I feel an electric joy I haven't felt in fifteen years. I am poorer in my bank account, but infinitely richer in my soul. If there is a creative fire in you, don't let safety smother it completely.",
-    timeAgo: "1 day ago",
-    auraGradient: "linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)",
-    reactions: { relate: 34, alone: 12, thank: 19, help: 24 },
+    title: "The Promotion I Didn't Want",
+    tag: "Career",
+    content: "Last month, I was promoted to engineering director. Everyone celebrated. My parents called to say how proud they were, and my peers congratulated me on 'making it.'\n\nBut inside, I feel a suffocating weight. I loved writing code, fixing bugs, and collaborating on technical problems. Now, my days are filled with spreadsheets, political alignment meetings, and performance reviews. I go home feeling empty. I want to ask to step down, but the fear of professional embarrassment and looking like a failure is keeping me silent. So daily, I wear the mask of a successful leader.",
+    timeAgo: "6 hours ago",
+    auraGradient: "linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)",
+    upvotes: 88,
     comments: [
-      { id: "c4", author: "Brave Sparrow", content: "This is beautiful. Sometimes, rich lives require simpler means. Good luck with your art!", timeAgo: "18 hours ago" }
-    ],
+      { id: "c4", author: "Empathetic Oak", content: "You're not a failure for knowing what makes you happy. Status isn't worth your daily joy.", timeAgo: "5 hours ago" }
+    ]
   },
   {
     id: "4",
-    title: "The Secret I Can't Share with My Family",
-    category: "Confessions",
-    content: "My family holds very traditional, religious beliefs. They expect me to marry someone within our community, settle down in our hometown, and follow the paths they laid out. They talk about it at every dinner.\n\nBut I don't share their beliefs anymore. I live in a city three hours away. I have a life here that they would completely reject. I love them deeply, and I know that telling them the truth would break their hearts and potentially lead to estrangement. So I live a double life. Every visit home feels like acting in a play. I'm writing this here because the weight of keeping these two lives apart is growing heavier by the day.",
-    timeAgo: "2 days ago",
+    title: "If we clean a vacuum cleaner...",
+    tag: "Shower Thoughts",
+    content: "If you clean a vacuum cleaner, do you become the vacuum cleaner?\n\nI was cleaning the dust filter on our Dyson this morning and this thought hit me. I've been staring at the wall for twenty minutes questioning the definitions of hygiene and agency.",
+    timeAgo: "1 day ago",
     auraGradient: "linear-gradient(135deg, #ef4444 0%, #8b5cf6 100%)",
-    reactions: { relate: 56, alone: 68, thank: 15, help: 9 },
+    upvotes: 189,
     comments: [
-      { id: "c5", author: "Wise Wave", content: "You are protecting your peace. That double life is hard, but your sanity is worth protecting.", timeAgo: "1 day ago" },
-      { id: "c6", author: "Kind Cloud", content: "You are not alone in this. Millions of us live in that liminal space. Big hug.", timeAgo: "12 hours ago" }
-    ],
+      { id: "c5", author: "Puzzled Panda", content: "You are the vacuum cleaner of vacuum cleaners. Mind blown.", timeAgo: "12 hours ago" }
+    ]
   },
   {
     id: "5",
-    title: "What My Father's Hands Taught Me",
-    category: "Life Lessons",
-    content: "My dad was a carpenter. His hands were always calloused, scarred, and stained with wood stain. As a teenager, I wanted a desk job. I wanted clean hands. I wanted status. I went to college and got an office job.\n\nHe passed away last summer. On my first week back at work, sitting in my air-conditioned cubicle staring at a screen, I looked at my soft, clean hands. I realized that my father built real, tangible shelters, tables, and toys that people loved and lived on. My digital reports would be forgotten in a week. I bought a small wood-turning lathe last month. I'm learning to make bowls. Holding the raw wood, I finally feel connected to him, and to what honest work really means.",
-    timeAgo: "3 days ago",
+    title: "Learning to Breathe Again",
+    tag: "Mental Health",
+    content: "For three years, panic attacks governed my life. I couldn't go to grocery stores without mapping out the exits. Going to restaurants felt like running a gauntlet. I felt like a broken version of my former self, hiding it from colleagues and friends behind fake excuses.\n\nSix months of therapy and daily practice of sitting in discomfort changed my life. Today, I sat in a crowded coffee shop for an hour, alone, reading a book. No panic. Just the warmth of my cup and the sound of chatter. If you are in the thick of it right now, please know that healing isn't a straight line, but it is possible. Keep breathing.",
+    timeAgo: "2 days ago",
     auraGradient: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)",
-    reactions: { relate: 112, alone: 43, thank: 88, help: 61 },
-    comments: [],
+    upvotes: 245,
+    comments: []
   }
 ];
 
@@ -86,13 +85,9 @@ export default function Home() {
     }
   };
 
-  // Find the top 3 stories with the most reactions
+  // Find the top 3 stories with the most upvotes
   const highlightedStories = [...INITIAL_STORIES]
-    .sort((a, b) => {
-      const aTotal = Object.values(a.reactions).reduce((sum, val) => sum + val, 0);
-      const bTotal = Object.values(b.reactions).reduce((sum, val) => sum + val, 0);
-      return bTotal - aTotal;
-    })
+    .sort((a, b) => b.upvotes - a.upvotes)
     .slice(0, 3);
 
   return (
@@ -150,22 +145,22 @@ export default function Home() {
           {/* Slogan pill */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-indigo/10 text-brand-indigo dark:bg-brand-indigo/20 dark:text-brand-lavender text-xs font-semibold tracking-wider uppercase mb-8 border border-brand-indigo/15 animate-float">
             <span>✦</span>
-            <span>Anonymous Storytelling Platform</span>
+            <span>Anonymous Sharing Hub</span>
             <span>✦</span>
           </div>
 
           {/* Main Title */}
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight font-serif text-zinc-900 dark:text-zinc-50 mb-6 leading-tight max-w-2xl">
-            Every untold story{" "}
+            Share anything{" "}
             <span className="italic font-normal bg-gradient-to-r from-brand-indigo via-brand-lavender to-brand-teal bg-clip-text text-transparent">
-              deserves a voice
+              fully anonymously
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-zinc-700 dark:text-zinc-300 max-w-2xl leading-relaxed mb-10">
-            Share your raw struggles, silent victories, and lessons learned anonymously. 
-            Connect with others through genuine empathy, free from judgment, profiles, and follower counts.
+            Publish your funny moments, jokes, shower thoughts, confessions, or silent victories. 
+            Connect with others through supportive upvotes and genuine conversations, completely profile-free.
           </p>
 
           {/* Hero CTAs */}
@@ -174,7 +169,7 @@ export default function Home() {
               href="/platform?write=true"
               className="w-full sm:w-56 px-8 py-4 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl font-bold text-center shadow-lg shadow-brand-indigo/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center"
             >
-              Share Your Story
+              Share a Joke or Story
             </Link>
             <Link
               href="/platform"
@@ -189,8 +184,8 @@ export default function Home() {
             {[
               { val: "No Profiles", desc: "No identity exposure" },
               { val: "No Followers", desc: "Equal voice for everyone" },
-              { val: "No Judgment", desc: "Supportive reactions only" },
-              { val: "Pure Empathy", desc: "Read and listen first" }
+              { val: "Supportive Upvotes", desc: "Show connection directly" },
+              { val: "Pure Privacy", desc: "No cookies or trackers" }
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center">
                 <span className="text-base font-bold text-zinc-900 dark:text-zinc-50">{stat.val}</span>
@@ -215,14 +210,14 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
                 <span className="text-[10px] font-extrabold tracking-widest text-brand-indigo dark:text-brand-lavender uppercase">
-                  Trending Highlights — Top 3 Most Echoed Stories
+                  Trending Highlights — Top 3 Most Upvoted Posts
                 </span>
               </div>
               <Link
                 href="/platform"
                 className="text-xs font-bold text-brand-indigo dark:text-brand-lavender hover:underline flex items-center gap-1"
               >
-                <span>View All Stories</span>
+                <span>View All Posts</span>
                 <span>→</span>
               </Link>
             </div>
@@ -258,7 +253,7 @@ export default function Home() {
               A Different Way to Connect
             </h2>
             <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-2">
-              Most social platforms feed on metrics. Untold feeds on understanding.
+              Most social platforms feed on metrics. Untold feeds on understanding and pure expression.
             </p>
           </div>
 
@@ -272,7 +267,7 @@ export default function Home() {
                 <h3 className="text-2xl font-bold font-serif text-zinc-700 dark:text-zinc-400 mb-6">
                   &quot;Who are you?&quot;
                 </h3>
-                <ul className="space-y-4 text-zinc-500 text-sm">
+                <ul className="space-y-4 text-zinc-505 text-sm">
                   <li className="flex items-start gap-2.5">
                     <span className="text-rose-500">✕</span>
                     <span>Identity-driven: Showcases highlights, popularity, and curated personas.</span>
@@ -308,22 +303,22 @@ export default function Home() {
                 <h3 className="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-50 mb-6">
                   &quot;What&apos;s your story?&quot;
                 </h3>
-                <ul className="space-y-4 text-zinc-700 dark:text-zinc-300 text-sm">
+                <ul className="space-y-4 text-zinc-750 dark:text-zinc-300 text-sm">
                   <li className="flex items-start gap-2.5">
                     <span className="text-brand-teal font-bold">✓</span>
-                    <span>Story-driven: Complete anonymity removes social masks and enables raw truth.</span>
+                    <span>Pure Expression: Complete anonymity removes social masks and enables raw truth.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-brand-teal font-bold">✓</span>
-                    <span>Empathy-focused: Unique reactions express connection rather than ranking.</span>
+                    <span>Upvote Connection: Simple, helpful voting shows community alignment and support.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-brand-teal font-bold">✓</span>
-                    <span>Safe conversations: Anonymous, moderated comments focused on support.</span>
+                    <span>Safe conversations: Anonymous, moderated comments focused on positive feedback.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="text-brand-teal font-bold">✓</span>
-                    <span>Valuable insights: Share failures, secrets, and triumphs to help others heal.</span>
+                    <span>No topic boundaries: Share a joke, a deep secret, a funny mistake, or a struggle.</span>
                   </li>
                 </ul>
               </div>
@@ -355,13 +350,13 @@ export default function Home() {
                 tag: "Protect"
               },
               {
-                title: "Listening & Empathy",
-                desc: "Read stories to understand, not to critique. Respond only with support, constructive comfort, or quiet presence.",
+                title: "Supportive Environment",
+                desc: "Upvote funny moments, good jokes, and genuine stories. Keep comments helpful, clean, and positive.",
                 tag: "Connect"
               },
               {
                 title: "Safety & Dignity",
-                desc: "Content showcasing harassment, toxicity, doxxing, or self-harm will be immediately moderated and removed.",
+                desc: "Content showcasing harassment, toxic spam, target doxxing, or self-harm will be immediately moderated and removed.",
                 tag: "Moderate"
               }
             ].map((principle, i) => (
