@@ -73,6 +73,7 @@ function PlatformContent() {
   const [activeUpvotes, setActiveUpvotes] = useState<{ [storyId: string]: boolean }>({});
   const [selectedTag, setSelectedTag] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailedStoryId, setDetailedStoryId] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -171,11 +172,13 @@ function PlatformContent() {
     setStories((prev) => [newStory, ...prev]);
   };
 
-  // Compile the list of unique tags dynamically from current stories
-  const dynamicTags = [
-    "All",
-    ...Array.from(new Set(stories.flatMap((s) => s.tags)))
-  ];
+  // Compile unique tags dynamically from current stories feed state
+  const dynamicTags = Array.from(new Set(stories.flatMap((s) => s.tags)));
+
+  // Filter tags list based on tag search query
+  const filteredTagsList = dynamicTags.filter((tag) =>
+    tag.toLowerCase().includes(tagSearchQuery.toLowerCase())
+  );
 
   // Filter & Search stories based on tags array selection
   const filteredStories = stories.filter((story) => {
@@ -251,13 +254,45 @@ function PlatformContent() {
             />
           </div>
 
-          {/* Tags panel */}
+          {/* Tags panel with sub-search box */}
           <div className="glass-panel p-5 rounded-2xl w-full border border-zinc-200/60 dark:border-white/5">
-            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-4">
+            <h3 className="text-xs font-black tracking-wider uppercase text-zinc-400 dark:text-zinc-505 mb-3">
               Filter by Tag
             </h3>
-            <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none">
-              {dynamicTags.map((tag) => (
+            
+            {/* Tag search bar */}
+            <div className="relative mb-3">
+              <input
+                type="text"
+                value={tagSearchQuery}
+                onChange={(e) => setTagSearchQuery(e.target.value)}
+                placeholder="Search tags..."
+                className="w-full px-3 py-1.5 text-[11px] rounded-lg border border-zinc-205 bg-zinc-55 dark:bg-zinc-900/50 dark:border-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-brand-indigo"
+              />
+              {tagSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setTagSearchQuery("")}
+                  className="absolute right-2.5 top-2.5 text-[10px] text-zinc-450 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-200"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <nav className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none max-h-60 lg:max-h-72 overflow-y-auto pr-1">
+              <button
+                onClick={() => setSelectedTag("All")}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold text-left whitespace-nowrap transition-all duration-300 ${
+                  selectedTag === "All"
+                    ? "bg-brand-indigo text-white shadow-md shadow-brand-indigo/10"
+                    : "bg-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-white/5"
+                }`}
+              >
+                All
+              </button>
+
+              {filteredTagsList.map((tag) => (
                 <button
                   key={tag}
                   onClick={() => setSelectedTag(tag)}
@@ -270,6 +305,12 @@ function PlatformContent() {
                   {tag}
                 </button>
               ))}
+
+              {filteredTagsList.length === 0 && (
+                <p className="text-[10px] italic text-zinc-400 dark:text-zinc-505 py-2">
+                  No tags found
+                </p>
+              )}
             </nav>
           </div>
 
