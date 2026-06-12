@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CloseIcon } from "./icons";
 import { bindRecovery, restoreRecovery } from "../app/actions";
 
@@ -10,6 +10,7 @@ interface RecoveryModalProps {
   currentAuthorId: string;
   onBindSuccess: (contact: string) => void;
   onRestoreSuccess: (recoveredId: string) => void;
+  defaultTab?: "bind" | "restore";
 }
 
 export const RecoveryModal: React.FC<RecoveryModalProps> = ({
@@ -17,15 +18,26 @@ export const RecoveryModal: React.FC<RecoveryModalProps> = ({
   onClose,
   currentAuthorId,
   onBindSuccess,
-  onRestoreSuccess
+  onRestoreSuccess,
+  defaultTab
 }) => {
-  const [tab, setTab] = useState<"bind" | "restore">("bind");
+  const [tab, setTab] = useState<"bind" | "restore">(defaultTab || "bind");
   const [contactType, setContactType] = useState<"email" | "phone">("email");
   const [contactVal, setContactVal] = useState("");
   const [restoreVal, setRestoreVal] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTab(defaultTab || "bind");
+      setError("");
+      setMessage("");
+      setContactVal("");
+      setRestoreVal("");
+    }
+  }, [isOpen, defaultTab]);
 
   if (!isOpen) return null;
 

@@ -115,6 +115,7 @@ function PlatformContent() {
 
   // Recovery States
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
+  const [recoveryModalTab, setRecoveryModalTab] = useState<"bind" | "restore">("bind");
   const [isRecoveryBound, setIsRecoveryBound] = useState(false);
   const [maskedContact, setMaskedContact] = useState("");
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -514,6 +515,7 @@ function PlatformContent() {
                             <button
                               onClick={() => {
                                 setIsProfileDropdownOpen(false);
+                                setRecoveryModalTab("bind");
                                 setIsRecoveryModalOpen(true);
                               }}
                               className="w-full py-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer text-center"
@@ -530,6 +532,7 @@ function PlatformContent() {
                       <button
                         onClick={() => {
                           setIsProfileDropdownOpen(false);
+                          setRecoveryModalTab("restore");
                           setIsRecoveryModalOpen(true);
                         }}
                         className="text-zinc-500 dark:text-zinc-400 hover:text-brand-indigo dark:hover:text-brand-lavender font-bold transition-colors cursor-pointer"
@@ -799,6 +802,7 @@ function PlatformContent() {
         isOpen={isRecoveryModalOpen}
         onClose={() => setIsRecoveryModalOpen(false)}
         currentAuthorId={myAuthorId}
+        defaultTab={recoveryModalTab}
         onBindSuccess={(contact) => {
           setIsRecoveryBound(true);
           if (contact.includes("@")) {
