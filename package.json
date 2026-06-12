@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "screenshot": "firefox --headless --no-remote --profile $(mktemp -d) --screenshot screenshot.png http://localhost:3000"
+    "screenshot": "firefox --headless --no-remote --profile $(mktemp -d) --screenshot screenshot.png http://localhost:3000",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "node scripts/seed.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

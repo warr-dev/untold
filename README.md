@@ -65,12 +65,18 @@ We believe that sharing real experiences without the pressure of a personal bran
      DATABASE_URL=postgresql://[user]:[password]@[host]/[database]?sslmode=require
      ```
 
-4. Run the development server:
+4. Run database migrations and seed default data (optional):
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+5. Run the development server:
    ```bash
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
 ---
 
