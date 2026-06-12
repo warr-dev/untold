@@ -99,7 +99,8 @@ function getAuraGradient(authorId: string): string {
 }
 
 function PlatformContent() {
-  const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
+  const [stories, setStories] = useState<StoryProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [tags, setTags] = useState<string[]>(PRESET_TAGS);
   const [activeUpvotes, setActiveUpvotes] = useState<{ [storyId: string]: boolean }>({});
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
@@ -130,13 +131,19 @@ function PlatformContent() {
   // Load database stories and tags on mount
   useEffect(() => {
     async function loadDbStories() {
+      setIsLoading(true);
       try {
         const dbStories = await getStories();
         if (dbStories !== null) {
           setStories(dbStories);
+        } else {
+          setStories(INITIAL_STORIES);
         }
       } catch (err) {
         console.error("Failed to load stories from Neon DB:", err);
+        setStories(INITIAL_STORIES);
+      } finally {
+        setIsLoading(false);
       }
     }
     async function loadDbTags() {
@@ -717,7 +724,12 @@ function PlatformContent() {
           </div>
 
           {/* Stories Grid */}
-          {filteredStories.length > 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-32">
+              <div className="w-10 h-10 border-4 border-brand-indigo border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-zinc-405 mt-4 font-medium animate-pulse">Loading stories...</p>
+            </div>
+          ) : filteredStories.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6 items-start">
               {filteredStories.map((story) => (
                 <StoryCard

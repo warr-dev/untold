@@ -76,7 +76,7 @@ const INITIAL_STORIES: StoryProps[] = [
 export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
-  const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
+  const [stories, setStories] = useState<StoryProps[]>([]);
 
   useEffect(() => {
     // Default theme to dark mode
@@ -100,9 +100,12 @@ export default function Home() {
         const dbStories = await getStories();
         if (dbStories !== null) {
           setStories(dbStories);
+        } else {
+          setStories(INITIAL_STORIES);
         }
       } catch (err) {
         console.error("Failed to load stories from Neon DB:", err);
+        setStories(INITIAL_STORIES);
       }
     }
     loadDbStories();
