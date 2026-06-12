@@ -69,6 +69,15 @@ async function run() {
       )
     `;
 
+    // 4. Tags Table
+    console.log("⚡ Creating 'tags' table...");
+    await sql`
+      CREATE TABLE IF NOT EXISTS tags (
+        name TEXT PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     console.log("✅ Database migrations completed successfully!");
   } catch (err) {
     console.error("❌ Migration failed:", err);

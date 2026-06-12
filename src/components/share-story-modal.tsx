@@ -8,6 +8,7 @@ interface ShareStoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (newStory: Omit<StoryProps, "id" | "authorId" | "timeAgo" | "auraGradient" | "upvotes" | "comments">) => void;
+  presetTags?: string[];
 }
 
 const PRESET_TAGS = [
@@ -22,10 +23,11 @@ const PRESET_TAGS = [
   "Random"
 ];
 
-export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClose, onSubmit }) => {
+export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClose, onSubmit, presetTags }) => {
+  const activePresets = presetTags || PRESET_TAGS;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([PRESET_TAGS[0]]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([activePresets[0] || "General"]);
   const [newTagInput, setNewTagInput] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
@@ -117,7 +119,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
     // Reset fields
     setTitle("");
     setContent("");
-    setSelectedTags([PRESET_TAGS[0]]);
+    setSelectedTags([activePresets[0] || "General"]);
     setNewTagInput("");
     setAgreed(false);
     onClose();
@@ -243,7 +245,7 @@ export const ShareStoryModal: React.FC<ShareStoryModalProps> = ({ isOpen, onClos
                 Popular Suggestions:
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {PRESET_TAGS.filter((tag) => !selectedTags.includes(tag)).map((tag) => (
+                {activePresets.filter((tag) => !selectedTags.includes(tag)).map((tag) => (
                   <button
                     key={tag}
                     type="button"

@@ -73,7 +73,7 @@ export async function getStories(): Promise<StoryProps[] | null> {
   }
 }
 
-// Insert a new anonymous story
+// Insert a new anonymous story and record its tags in the tags table
 export async function createStory(story: {
   id: string;
   authorId: string;
@@ -90,6 +90,16 @@ export async function createStory(story: {
       INSERT INTO stories (id, author_id, title, content, tags, upvotes, aura_gradient)
       VALUES (${story.id}, ${story.authorId}, ${story.title}, ${story.content}, ${story.tags}, 0, ${story.auraGradient})
     `;
+
+    // Register tags in the database tags index
+    for (const tag of story.tags) {
+      await sql`
+        INSERT INTO tags (name)
+        VALUES (${tag})
+        ON CONFLICT (name) DO NOTHING
+      `;
+    }
+
     return true;
   } catch (error) {
     console.error("❌ Failed to insert story into DB:", error);
@@ -175,6 +185,24 @@ export async function restoreRecovery(contact: string): Promise<string | null> {
     return null;
   } catch (error) {
     console.error("❌ Failed to restore recovery from DB:", error);
+    return null;
+  }
+}
+
+// Fetch all registered tags from Neon
+export async function getTags(): Promise<string[] | null> {
+  if (!sql) return null;
+
+  try {
+    await ensureDb();
+    const result = await sql`
+      SELECT name
+      FROM tags
+      ORDER BY name ASC
+    `;
+    return result.map((t: any) => t.name);
+  } catch (error) {
+    console.error("❌ Failed to fetch tags from DB:", error);
     return null;
   }
 }

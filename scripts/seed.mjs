@@ -94,10 +94,32 @@ const INITIAL_STORIES = [
 async function run() {
   console.log("🌱 Database seeding started...");
   try {
-    // Clear existing stories & comments to ensure clean seed
+    // Clear existing stories, comments & tags to ensure clean seed
     console.log("🧹 Clearing existing database data...");
     await sql`DELETE FROM comments`;
     await sql`DELETE FROM stories`;
+    await sql`DELETE FROM tags`;
+
+    const PRESET_TAGS = [
+      "Jokes",
+      "Funny Moments",
+      "Shower Thoughts",
+      "Confessions",
+      "Life Lessons",
+      "Career",
+      "Mental Health",
+      "Relationships",
+      "Random"
+    ];
+
+    console.log("🏷️ Seeding default preset tags...");
+    for (const tag of PRESET_TAGS) {
+      await sql`
+        INSERT INTO tags (name)
+        VALUES (${tag})
+        ON CONFLICT (name) DO NOTHING
+      `;
+    }
 
     for (const story of INITIAL_STORIES) {
       console.log(`📝 Seeding story: "${story.title}"...`);

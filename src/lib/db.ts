@@ -47,6 +47,14 @@ export async function initDatabase() {
       )
     `;
 
+    // 4. Tags Table (stores dynamic and preset categories)
+    await sql`
+      CREATE TABLE IF NOT EXISTS tags (
+        name TEXT PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     console.log("✅ Neon Database tables initialized successfully.");
     return true;
   } catch (error) {

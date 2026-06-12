@@ -6,7 +6,7 @@ import { LogoIcon, SunIcon, MoonIcon, PlusIcon, CloseIcon, QuoteIcon } from "../
 import { StoryCard, StoryProps } from "../../components/story-card";
 import { ShareStoryModal } from "../../components/share-story-modal";
 import { RecoveryModal } from "../../components/recovery-modal";
-import { getStories, createStory, upvoteStory, addComment } from "../actions";
+import { getStories, createStory, upvoteStory, addComment, getTags } from "../actions";
 
 const INITIAL_STORIES: StoryProps[] = [
   {
@@ -75,6 +75,18 @@ const INITIAL_STORIES: StoryProps[] = [
   }
 ];
 
+const PRESET_TAGS = [
+  "Jokes",
+  "Funny Moments",
+  "Shower Thoughts",
+  "Confessions",
+  "Life Lessons",
+  "Career",
+  "Mental Health",
+  "Relationships",
+  "Random"
+];
+
 function getAuraGradient(authorId: string): string {
   if (!authorId) return "linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)";
   let hash = 0;
@@ -88,6 +100,7 @@ function getAuraGradient(authorId: string): string {
 
 function PlatformContent() {
   const [stories, setStories] = useState<StoryProps[]>(INITIAL_STORIES);
+  const [tags, setTags] = useState<string[]>(PRESET_TAGS);
   const [activeUpvotes, setActiveUpvotes] = useState<{ [storyId: string]: boolean }>({});
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
   const [feedType, setFeedType] = useState<"all" | "following">("all");
@@ -114,7 +127,7 @@ function PlatformContent() {
 
   const searchParams = useSearchParams();
 
-  // Load database stories on mount
+  // Load database stories and tags on mount
   useEffect(() => {
     async function loadDbStories() {
       try {
@@ -126,7 +139,18 @@ function PlatformContent() {
         console.error("Failed to load stories from Neon DB:", err);
       }
     }
+    async function loadDbTags() {
+      try {
+        const dbTags = await getTags();
+        if (dbTags !== null && dbTags.length > 0) {
+          setTags(dbTags);
+        }
+      } catch (err) {
+        console.error("Failed to load tags from Neon DB:", err);
+      }
+    }
     loadDbStories();
+    loadDbTags();
   }, []);
 
   // Check URL parameters and local storage on mount
@@ -293,6 +317,7 @@ function PlatformContent() {
     };
 
     setStories((prev) => [newStory, ...prev]);
+    setTags((prev) => Array.from(new Set([...prev, ...newStoryData.tags])));
 
     try {
       await createStory({
@@ -308,20 +333,8 @@ function PlatformContent() {
     }
   };
 
-  const PRESET_TAGS = [
-    "Jokes",
-    "Funny Moments",
-    "Shower Thoughts",
-    "Confessions",
-    "Life Lessons",
-    "Career",
-    "Mental Health",
-    "Relationships",
-    "Random"
-  ];
-
   // Compile unique tags dynamically, always ensuring default preset tags are available
-  const dynamicTags = Array.from(new Set([...PRESET_TAGS, ...stories.flatMap((s) => s.tags)]));
+  const dynamicTags = tags;
 
   // Filter tags list based on tag search query
   const filteredTagsList = dynamicTags.filter((tag) =>
@@ -766,6 +779,7 @@ function PlatformContent() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateStory}
+        presetTags={tags}
       />
 
       {/* Recovery Modal */}
